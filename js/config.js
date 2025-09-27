@@ -4,13 +4,13 @@ const API_CONFIG = {
     development: {
         baseURL: 'http://localhost:3000/api'
     },
-    // Para produção (ALTERE PARA SEU DOMÍNIO!)
+    // Para produção - Railway backend
     production: {
-        baseURL: 'https://seu-backend.railway.app/api'
+        baseURL: 'https://web-production-090a7.up.railway.app/api'
     }
 };
 
-// Detectar ambiente
+// Detectar ambiente - Vercel usa nutt-festas-website.vercel.app
 const environment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
     ? 'development' 
     : 'production';
