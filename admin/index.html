@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Administrativo | Nutt Festas</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="admin-page">
+    <header class="admin-header">
+        <div class="container">
+            <h1>Painel Administrativo - Nutt Festas</h1>
+            <nav class="admin-nav">
+                <ul>
+                    <li><a href="index.html" class="active">Gerenciar Galeria</a></li>
+                    <li><a href="#" id="logoutBtn">Sair <i class="fas fa-sign-out-alt"></i></a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="admin-content">
+        <div class="container">
+            <div class="admin-card">
+                <h2>Gerenciamento da Galeria</h2>
+                
+                <div class="admin-actions">
+                    <button id="addItemBtn" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Adicionar Novo Item
+                    </button>
+                </div>
+                
+                <div id="galleryItems" class="gallery-grid">
+                    <!-- Os itens da galeria serão carregados dinamicamente via JavaScript -->
+                    <p class="loading-message">Carregando itens...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal para adicionar/editar item -->
+    <div id="itemModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 id="modalTitle" class="modal-title">Adicionar Novo Item</h2>
+            
+            <form id="itemForm">
+                <input type="hidden" id="itemId">
+                
+                <div class="form-group">
+                    <label for="title">Título</label>
+                    <input type="text" id="title" name="title" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="caption">Legenda</label>
+                    <textarea id="caption" name="caption" rows="3" required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="fileUpload">Imagem ou Vídeo</label>
+                    <div class="file-upload" id="dropArea">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>Arraste e solte arquivos aqui ou clique para selecionar</p>
+                        <input type="file" id="fileUpload" name="fileUpload" accept="image/*,video/*" style="display: none;">
+                    </div>
+                    <div id="filePreview" class="file-preview"></div>
+                    <p id="fileError" class="message error" style="display: none;"></p>
+                </div>
+                
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                    <button type="button" id="cancelBtn" class="btn btn-danger">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de confirmação para exclusão -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-title">Confirmar Exclusão</h2>
+            <p>Tem certeza que deseja excluir este item? Esta ação não pode ser desfeita.</p>
+            
+            <div class="form-group">
+                <button id="confirmDeleteBtn" class="btn btn-danger">Sim, Excluir</button>
+                <button id="cancelDeleteBtn" class="btn btn-primary">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>

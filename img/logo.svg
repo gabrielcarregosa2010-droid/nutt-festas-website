@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 150" width="500" height="150">
+  <!-- Balões -->
+  <g id="balloons">
+    <!-- Balão rosa claro -->
+    <ellipse cx="90" cy="70" rx="40" ry="45" fill="#ffb6c1" />
+    
+    <!-- Linhas dos balões (marrom escuro) -->
+    <path d="M50 80 C60 110, 70 140, 80 170" stroke="#6d1a36" stroke-width="6" fill="none" />
+    <path d="M80 80 C90 110, 95 140, 100 170" stroke="#6d1a36" stroke-width="6" fill="none" />
+  </g>
+  
+  <!-- Texto "Nutt Festa" -->
+  <g id="logo-text">
+    <text x="150" y="100" font-family="Arial, sans-serif" font-size="60" font-weight="bold" fill="#ffb6c1">Nutt Festa</text>
+    <text x="220" y="130" font-family="Arial, sans-serif" font-size="18" fill="#999999">SUA FESTA COM SEU ESTILO</text>
+  </g>
+</svg>
