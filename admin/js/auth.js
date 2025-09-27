@@ -1,5 +1,5 @@
 // Verificar se o usuário está logado
-function checkAuth() {
+async function checkAuth() {
     // Não verificar na página de login
     if (window.location.pathname.includes('login.html')) {
         return;
@@ -12,12 +12,16 @@ function checkAuth() {
         return;
     }
     
-    // Verificar se o token ainda é válido
-    api.getMe().catch(() => {
+    try {
+        // Verificar se o token ainda é válido
+        await api.getMe();
+        // Token válido, usuário pode continuar
+    } catch (error) {
         // Token inválido ou expirado
+        console.log('Token inválido, redirecionando para login');
         api.clearAuth();
         window.location.href = 'login.html';
-    });
+    }
 }
 
 // Processar o formulário de login
@@ -90,9 +94,9 @@ async function handleLogout() {
 }
 
 // Inicializar
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     // Verificar autenticação
-    checkAuth();
+    await checkAuth();
     
     // Configurar formulário de login
     const loginForm = document.getElementById('loginForm');
