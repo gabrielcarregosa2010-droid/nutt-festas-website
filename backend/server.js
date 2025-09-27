@@ -5,6 +5,13 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const connectDB = require('./config/database');
 
+// Debug das variáveis de ambiente
+console.log('🔍 DEBUG - Variáveis de ambiente:');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('PORT:', process.env.PORT);
+console.log('MONGODB_URI definida:', !!process.env.MONGODB_URI);
+console.log('JWT_SECRET definida:', !!process.env.JWT_SECRET);
+
 // Importar rotas
 const authRoutes = require('./routes/auth');
 const galleryRoutes = require('./routes/gallery');
