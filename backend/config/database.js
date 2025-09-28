@@ -29,10 +29,23 @@ const connectDB = async () => {
     // Event listeners para monitorar a conexão
     mongoose.connection.on('error', (err) => {
       console.error('❌ Erro na conexão MongoDB:', err);
+      if (err.message.includes('IP') || err.message.includes('whitelist')) {
+        console.log('💡 DICA: Verifique se seu IP está na whitelist do MongoDB Atlas');
+        console.log('🔗 Acesse: https://cloud.mongodb.com/v2/projects/[SEU_PROJECT_ID]/security/network/accessList');
+      }
     });
 
     mongoose.connection.on('disconnected', () => {
       console.log('⚠️ MongoDB desconectado');
+      // Tentar reconectar após 5 segundos
+      setTimeout(() => {
+        console.log('🔄 Tentando reconectar ao MongoDB...');
+        connectDB();
+      }, 5000);
+    });
+
+    mongoose.connection.on('reconnected', () => {
+      console.log('✅ MongoDB reconectado com sucesso');
     });
 
     // Graceful shutdown

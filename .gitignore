@@ -63,3 +63,4 @@ Thumbs.db
 
 # Uploads directory (if you have user uploads)
 uploads/
+.vercel

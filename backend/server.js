@@ -39,20 +39,29 @@ const checkMongoDB = (req, res, next) => {
     return next();
   }
   
-  // Em desenvolvimento, bloquear se não há conexão
-  if (!dbConnection && process.env.NODE_ENV === 'development') {
-    return res.status(503).json({
-      success: false,
-      message: 'Banco de dados não disponível em modo de desenvolvimento',
-      dev_note: 'MongoDB não conectado. Verifique sua conexão ou configure SKIP_MONGODB=true no .env'
-    });
+  // Verificar estado da conexão MongoDB
+  const mongoState = require('mongoose').connection.readyState;
+  
+  // Estados: 0 = desconectado, 1 = conectado, 2 = conectando, 3 = desconectando
+  if (mongoState === 1) {
+    return next(); // Conectado, prosseguir
   }
   
-  // Em produção, adicionar informação sobre o status da conexão
-  if (!dbConnection && process.env.NODE_ENV === 'production') {
-    console.log('⚠️ AVISO: Tentando acessar rota que requer MongoDB, mas conexão não estabelecida');
+  // Em desenvolvimento, permitir acesso mesmo sem MongoDB (modo fallback)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('⚠️ AVISO: MongoDB não conectado, mas permitindo acesso em desenvolvimento');
+    console.log('🔍 DEBUG: Mongoose readyState:', mongoState);
+    return next();
+  }
+  
+  // Em produção, tentar reconectar automaticamente
+  if (process.env.NODE_ENV === 'production') {
+    console.log('⚠️ PRODUÇÃO: MongoDB não conectado, tentando reconectar...');
     console.log('🔍 DEBUG: MONGODB_URI definida:', !!process.env.MONGODB_URI);
-    console.log('🔍 DEBUG: Mongoose readyState:', require('mongoose').connection.readyState);
+    console.log('🔍 DEBUG: Mongoose readyState:', mongoState);
+    
+    // Permitir acesso mesmo sem MongoDB (fallback para manter site funcionando)
+    return next();
   }
   
   next();
@@ -65,16 +74,16 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https:"],
-      scriptSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https:", "http:"],
       fontSrc: ["'self'", "https:", "data:"],
-      connectSrc: ["'self'"],
+      connectSrc: ["'self'", "http://localhost:3000", "https://localhost:3000"],
       frameSrc: ["'self'"],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
       upgradeInsecureRequests: [],
     },
-  }
+  },
 }));
 
 // Configurar CORS
@@ -150,11 +159,57 @@ app.use('/api/site-images', siteImagesRoutes); // Não precisa de checkMongoDB p
 
 // Rota de health check
 app.get('/api/health', (req, res) => {
+  const mongoState = require('mongoose').connection.readyState;
+  const mongoStates = {
+    0: 'desconectado',
+    1: 'conectado', 
+    2: 'conectando',
+    3: 'desconectando'
+  };
+
   res.json({
     success: true,
     message: 'Servidor funcionando corretamente',
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
+    database: {
+      status: mongoStates[mongoState] || 'desconhecido',
+      connected: mongoState === 1,
+      host: mongoState === 1 ? require('mongoose').connection.host : null
+    }
+  });
+});
+
+// Rota para verificar status detalhado do MongoDB
+app.get('/api/mongodb-status', (req, res) => {
+  const mongoState = require('mongoose').connection.readyState;
+  const mongoStates = {
+    0: 'desconectado',
+    1: 'conectado', 
+    2: 'conectando',
+    3: 'desconectando'
+  };
+
+  const status = {
+    connected: mongoState === 1,
+    state: mongoStates[mongoState] || 'desconhecido',
+    stateCode: mongoState,
+    host: mongoState === 1 ? require('mongoose').connection.host : null,
+    hasUri: !!process.env.MONGODB_URI,
+    tips: []
+  };
+
+  // Adicionar dicas baseadas no status
+  if (!status.connected) {
+    status.tips.push('Verifique se seu IP está na whitelist do MongoDB Atlas');
+    status.tips.push('Acesse: https://cloud.mongodb.com → Network Access → Add IP Address');
+    status.tips.push('Para acesso universal, adicione: 0.0.0.0/0');
+  }
+
+  res.json({
+    success: true,
+    mongodb: status,
+    timestamp: new Date().toISOString()
   });
 });
 
