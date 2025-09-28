@@ -1,34 +1,30 @@
 const jwt = require('jsonwebtoken');
 
-// JWT Secret (em produção, usar variável de ambiente)
-const JWT_SECRET = process.env.JWT_SECRET || 'nutt-festas-secret-key-2024';
-
-// Função para gerar token
+// Função para gerar token JWT
 function generateToken(user) {
   return jwt.sign(
     { 
-      id: user.id, 
-      username: user.username, 
-      role: user.role 
+      id: user.id || 'admin',
+      username: user.username,
+      role: user.role || 'admin'
     },
-    JWT_SECRET,
-    { expiresIn: '24h' }
+    process.env.JWT_SECRET || 'nutt-festas-secret-key-2024',
+    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
   );
 }
 
 module.exports = async (req, res) => {
   // Configurar CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-  // Handle preflight requests
+  // Tratar preflight request
   if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
+    return res.status(200).end();
   }
 
-  // Só aceitar POST
+  // Apenas aceitar POST
   if (req.method !== 'POST') {
     return res.status(405).json({
       success: false,
@@ -47,25 +43,30 @@ module.exports = async (req, res) => {
       });
     }
 
-    // Credenciais de fallback para produção
-    const fallbackPassword = process.env.FALLBACK_ADMIN_PASSWORD || 'NuttFestas2024!@#$';
-    
-    if ((username === 'admin' || username === 'admin@nuttfestas.com') && password === fallbackPassword) {
-      const userData = { 
-        id: 'fallback-admin-id', 
+    // Credenciais de fallback para admin
+    const adminCredentials = {
+      username: 'admin',
+      password: 'NuttFestas2024!@#$'
+    };
+
+    // Verificar credenciais
+    if (username === adminCredentials.username && password === adminCredentials.password) {
+      const user = {
+        id: 'admin',
         username: 'admin',
-        email: 'admin@nuttfestas.com',
-        role: 'admin' 
+        role: 'admin'
       };
-      
-      const token = generateToken(userData);
-      
+
+      const token = generateToken(user);
+
       return res.status(200).json({
         success: true,
         message: 'Login realizado com sucesso',
-        data: {
-          token,
-          user: userData
+        token,
+        user: {
+          id: user.id,
+          username: user.username,
+          role: user.role
         }
       });
     } else {
