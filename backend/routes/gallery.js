@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const GalleryItem = require('../models/GalleryItem');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
 const { validateGalleryItem, validateGalleryItemUpdate } = require('../middleware/validation');
@@ -9,6 +10,24 @@ const { validateGalleryItem, validateGalleryItemUpdate } = require('../middlewar
 // @access  Public
 router.get('/', async (req, res) => {
   try {
+    // Verificar se o MongoDB está conectado
+    if (mongoose.connection.readyState !== 1) {
+      console.log('⚠️ MongoDB não conectado, retornando galeria vazia');
+      return res.json({
+        success: true,
+        data: {
+          items: [],
+          pagination: {
+            currentPage: 1,
+            totalPages: 0,
+            totalItems: 0,
+            itemsPerPage: 50
+          }
+        },
+        message: 'Galeria temporariamente indisponível'
+      });
+    }
+
     const { page = 1, limit = 50, sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
     
     const options = {

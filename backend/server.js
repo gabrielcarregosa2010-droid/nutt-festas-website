@@ -34,6 +34,7 @@ connectDB().then(conn => {
 
 // Middleware para verificar conexão MongoDB
 const checkMongoDB = (req, res, next) => {
+  // Em desenvolvimento, bloquear se não há conexão
   if (!dbConnection && process.env.NODE_ENV === 'development') {
     return res.status(503).json({
       success: false,
@@ -41,6 +42,14 @@ const checkMongoDB = (req, res, next) => {
       dev_note: 'MongoDB não conectado. Verifique sua conexão ou configure SKIP_MONGODB=true no .env'
     });
   }
+  
+  // Em produção, adicionar informação sobre o status da conexão
+  if (!dbConnection && process.env.NODE_ENV === 'production') {
+    console.log('⚠️ AVISO: Tentando acessar rota que requer MongoDB, mas conexão não estabelecida');
+    console.log('🔍 DEBUG: MONGODB_URI definida:', !!process.env.MONGODB_URI);
+    console.log('🔍 DEBUG: Mongoose readyState:', require('mongoose').connection.readyState);
+  }
+  
   next();
 };
 
