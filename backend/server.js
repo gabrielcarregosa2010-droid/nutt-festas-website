@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
 const connectDB = require('./config/database');
 
 // Debug das variáveis de ambiente
@@ -20,7 +21,24 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Conectar ao banco de dados
-connectDB();
+let dbConnection = null;
+connectDB().then(conn => {
+  dbConnection = conn;
+}).catch(err => {
+  console.error('Falha na conexão inicial:', err);
+});
+
+// Middleware para verificar conexão MongoDB
+const checkMongoDB = (req, res, next) => {
+  if (!dbConnection && process.env.NODE_ENV === 'development') {
+    return res.status(503).json({
+      success: false,
+      message: 'Banco de dados não disponível em modo de desenvolvimento',
+      dev_note: 'MongoDB não conectado. Verifique sua conexão ou configure SKIP_MONGODB=true no .env'
+    });
+  }
+  next();
+};
 
 // Middleware de segurança
 app.use(helmet({
@@ -93,9 +111,9 @@ app.use((req, res, next) => {
   next();
 });
 
-// Rotas da API
-app.use('/api/auth', authLimiter, authRoutes);
-app.use('/api/gallery', galleryRoutes);
+// Rotas da API (com verificação de MongoDB)
+app.use('/api/auth', checkMongoDB, authRoutes);
+app.use('/api/gallery', checkMongoDB, galleryRoutes);
 
 // Rota de health check
 app.get('/api/health', (req, res) => {
@@ -107,15 +125,27 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Rota para servir arquivos estáticos (se necessário)
+// Servir arquivos estáticos do frontend
+app.use(express.static('../'));
+app.use('/admin', express.static('../admin'));
+app.use('/css', express.static('../css'));
+app.use('/js', express.static('../js'));
+app.use('/img', express.static('../img'));
+
+// Rota para servir arquivos estáticos de upload (se necessário)
 app.use('/uploads', express.static('uploads'));
 
-// Middleware para rotas não encontradas
-app.use('*', (req, res) => {
+// Middleware para rotas de API não encontradas (apenas para /api/*)
+app.use('/api/*', (req, res) => {
   res.status(404).json({
     success: false,
     message: 'Rota não encontrada'
   });
+});
+
+// Servir index.html para rotas não encontradas (SPA fallback)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../index.html'));
 });
 
 // Middleware global de tratamento de erros

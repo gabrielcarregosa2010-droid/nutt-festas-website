@@ -1,6 +1,6 @@
 /* Admin Panel Specific Styles */
 .admin-page {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #ffb6c1 0%, #ff758f 100%);
     min-height: 100vh;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
@@ -11,7 +11,7 @@
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #ffb6c1 0%, #ff758f 100%);
     padding: 1rem;
 }
 
@@ -32,7 +32,7 @@
     margin-bottom: 0.5rem;
     font-size: 2rem;
     font-weight: 700;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #ffb6c1 0%, #ff758f 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -46,16 +46,25 @@
 }
 
 .form-group {
-    margin-bottom: 2rem;
+    margin-bottom: 2.5rem;
     text-align: left;
+    padding: 1rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.form-group:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-top: 2rem;
 }
 
 .form-group label {
     display: block;
-    margin-bottom: 0.8rem;
+    margin-bottom: 1rem;
     font-weight: 600;
     color: #2d3748;
     font-size: 0.95rem;
+    padding-bottom: 0.5rem;
 }
 
 .form-group input, .form-group textarea, .form-group select {
@@ -67,13 +76,14 @@
     transition: all 0.3s ease;
     background-color: #f7fafc;
     box-sizing: border-box;
+    margin-top: 0.5rem;
 }
 
 .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: #ff758f;
     background-color: white;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    box-shadow: 0 0 0 3px rgba(255, 117, 143, 0.1);
 }
 
 .btn {
@@ -96,13 +106,13 @@
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #ffb6c1 0%, #ff758f 100%);
     color: white;
     width: 100%;
 }
 
 .btn-primary:hover {
-    background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+    background: linear-gradient(135deg, #ff9bb0 0%, #ff5a7a 100%);
 }
 
 .btn-danger {
@@ -178,7 +188,7 @@
     background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
     padding: 1.5rem 0;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    border-bottom: 3px solid #667eea;
+    border-bottom: 3px solid #ff758f;
 }
 
 .admin-header .container {
@@ -249,11 +259,11 @@
     color: #2d3748;
     font-size: 1.8rem;
     font-weight: 700;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #ffb6c1 0%, #ff758f 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    border-bottom: 3px solid #667eea;
+    border-bottom: 3px solid #ff758f;
     padding-bottom: 1rem;
 }
 
@@ -321,20 +331,21 @@
 .item-actions {
     display: flex;
     justify-content: space-between;
-    gap: 0.5rem;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .item-actions button {
-    padding: 0.75rem 1rem;
+    padding: 0.75rem 1.5rem;
     border: none;
     border-radius: 8px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
     flex: 1;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s;
+    margin: 0 0.25rem;
 }
 
 .edit-btn {
@@ -349,25 +360,25 @@
 
 /* File Upload */
 .file-upload {
-    border: 3px dashed #667eea;
+    border: 3px dashed #ff758f;
     padding: 3rem 2rem;
     text-align: center;
     border-radius: 16px;
     margin-bottom: 2rem;
     cursor: pointer;
     transition: all 0.3s ease;
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+    background: linear-gradient(135deg, rgba(255, 182, 193, 0.05) 0%, rgba(255, 117, 143, 0.05) 100%);
 }
 
 .file-upload:hover {
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-    border-color: #5a67d8;
+    background: linear-gradient(135deg, rgba(255, 182, 193, 0.1) 0%, rgba(255, 117, 143, 0.1) 100%);
+    border-color: #ff5a7a;
     transform: translateY(-2px);
 }
 
 .file-upload i {
     font-size: 3rem;
-    color: #667eea;
+    color: #ff758f;
     margin-bottom: 1rem;
     display: block;
 }
@@ -461,11 +472,11 @@
     color: #2d3748;
     font-size: 1.8rem;
     font-weight: 700;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #ffb6c1 0%, #ff758f 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    border-bottom: 3px solid #667eea;
+    border-bottom: 3px solid #ff758f;
     padding-bottom: 1rem;
 }
 
@@ -583,7 +594,6 @@
     .modal-content {
         padding: 1.5rem 1rem;
     }
-}
     
     .admin-nav ul {
         margin-top: 1rem;
@@ -607,6 +617,7 @@
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     }
 }
+
 
 @media (max-width: 480px) {
     .gallery-grid {

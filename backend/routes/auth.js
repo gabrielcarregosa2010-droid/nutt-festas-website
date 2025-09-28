@@ -11,6 +11,37 @@ router.post('/login', validateLogin, async (req, res) => {
   try {
     const { username, password } = req.body;
 
+    // MODO DESENVOLVIMENTO: Login sem MongoDB
+    if (process.env.NODE_ENV === 'development' && !require('mongoose').connection.readyState) {
+      // Credenciais de teste para desenvolvimento
+      if ((username === 'admin' || username === 'admin@nuttfestas.com') && password === 'admin123') {
+        const token = generateToken({ 
+          id: 'dev-admin-id', 
+          username: 'admin', 
+          role: 'admin' 
+        });
+        
+        return res.json({
+          success: true,
+          message: 'Login realizado com sucesso (modo desenvolvimento)',
+          data: {
+            token,
+            user: {
+              id: 'dev-admin-id',
+              username: 'admin',
+              email: 'admin@nuttfestas.com',
+              role: 'admin'
+            }
+          }
+        });
+      } else {
+        return res.status(401).json({
+          success: false,
+          message: 'Credenciais inválidas. Use: admin / admin123'
+        });
+      }
+    }
+
     // Buscar usuário (incluindo senha para comparação)
     const user = await User.findOne({ 
       $or: [{ username }, { email: username }],

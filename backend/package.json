@@ -7,7 +7,9 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "prod": "NODE_ENV=production node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test-connection": "node scripts/testConnection.js",
+    "create-admin": "node scripts/createAdmin.js"
   },
   "keywords": ["api", "express", "mongodb", "gallery"],
   "author": "",

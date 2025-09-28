@@ -1,19 +1,29 @@
-// Configuração da API
-const API_CONFIG = {
-  baseURL: 'http://localhost:3000/api',
-  timeout: 30000 // 30 segundos para uploads grandes
+// Configuração da API - usa a configuração dinâmica do config.js
+const API_SETTINGS = {
+    baseURL: API_BASE_URL,
+    timeout: 30000 // 30 segundos para uploads grandes
 };
 
 // Classe para gerenciar a API
 class ApiService {
   constructor() {
-    this.baseURL = API_CONFIG.baseURL;
+    this.baseURL = API_SETTINGS.baseURL;
     this.token = localStorage.getItem('authToken');
   }
 
   // Método para fazer requisições HTTP
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
+    
+    // Log detalhado da requisição
+    console.log('🔄 API Request:', {
+      url,
+      method: options.method || 'GET',
+      endpoint,
+      baseURL: this.baseURL,
+      hasToken: !!this.token,
+      timestamp: new Date().toISOString()
+    });
     
     const config = {
       headers: {
@@ -30,15 +40,42 @@ class ApiService {
 
     try {
       const response = await fetch(url, config);
+      
+      // Log da resposta
+      console.log('📥 API Response:', {
+        url,
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        timestamp: new Date().toISOString()
+      });
+      
       const data = await response.json();
 
       if (!response.ok) {
+        console.error('❌ API Error Response:', {
+          url,
+          status: response.status,
+          data,
+          timestamp: new Date().toISOString()
+        });
         throw new Error(data.message || `Erro HTTP: ${response.status}`);
       }
 
+      console.log('✅ API Success:', {
+        url,
+        success: data.success,
+        timestamp: new Date().toISOString()
+      });
+
       return data;
     } catch (error) {
-      console.error('Erro na requisição:', error);
+      console.error('💥 API Request Failed:', {
+        url,
+        error: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString()
+      });
       
       // Se token expirou, limpar e redirecionar para login
       if (error.message.includes('Token expirado') || error.message.includes('Token inválido')) {

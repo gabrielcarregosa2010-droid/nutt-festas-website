@@ -6,6 +6,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     galleryContainer.innerHTML = '<p class="loading-message">Carregando galeria...</p>';
     
     try {
+        // Criar instância da API
+        const api = new ApiService();
+        
         // Carregar itens da API
         const response = await api.getGalleryItems({ 
             sortBy: 'createdAt', 

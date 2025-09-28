@@ -378,12 +378,20 @@ main {
 .service-icon {
     font-size: 2.5rem;
     color: var(--accent-color);
-    margin-bottom: 20px;
+    margin-bottom: 25px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .service-card h3 {
     font-size: 1.5rem;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
+    margin-top: 15px;
+}
+
+.service-card p {
+    margin-top: 15px;
+    padding-top: 10px;
 }
 
 /* Schedule Section */
@@ -519,20 +527,31 @@ main {
 
 .gallery-item:hover {
     transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
 }
 
 .gallery-item img, .gallery-item video {
     width: 100%;
     height: 200px;
     object-fit: cover;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .gallery-item .content {
-    padding: 1rem;
+    padding: 1.5rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .gallery-item h3 {
-    margin-bottom: 0.5rem;
+    margin-bottom: 1rem;
+    margin-top: 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.gallery-item p {
+    margin-top: 1rem;
+    padding-top: 0.5rem;
 }
 
 .loading-message {
