@@ -38,7 +38,7 @@ body {
 /* Header Styles */
 header {
     background-color: var(--primary-color);
-    padding: 1rem 0;
+    padding: 0.5rem 0;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     position: fixed;
     top: 0;
@@ -58,7 +58,7 @@ header {
 }
 
 .logo img {
-    height: 80px;
+    height: 60px;
     width: auto;
     transition: transform 0.3s ease;
 }
@@ -80,7 +80,7 @@ header .container {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin: 20px;
+    margin: 10px;
 }
 
 .logo {
@@ -89,7 +89,7 @@ header .container {
 }
 
 .logo img {
-    height: 100px;
+    height: 60px;
     width: auto;
     transition: var(--transition);
 }
