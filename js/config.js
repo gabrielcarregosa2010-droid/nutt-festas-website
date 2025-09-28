@@ -4,9 +4,9 @@ const API_CONFIG = {
     development: {
         baseURL: 'http://localhost:3000/api'
     },
-    // Para produção - Railway backend
+    // Para produção - Vercel backend
     production: {
-        baseURL: 'https://web-production-090a7.up.railway.app/api'
+        baseURL: 'https://nutt-festas-website.vercel.app/api'
     }
 };
 
