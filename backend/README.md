@@ -108,7 +108,7 @@ const response = await fetch('/api/auth/login', {
   },
   body: JSON.stringify({
     username: 'admin',
-    password: 'admin123'
+    password: 'Nutt123'
   })
 });
 

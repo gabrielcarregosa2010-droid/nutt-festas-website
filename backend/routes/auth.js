@@ -39,7 +39,7 @@ router.post('/login', validateLogin, async (req, res) => {
       } else {
         return res.status(401).json({
           success: false,
-          message: 'Credenciais inválidas. Use: admin / admin123'
+          message: 'Credenciais inválidas. Use: admin / Nutt123'
         });
       }
     }

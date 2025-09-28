@@ -21,7 +21,7 @@ const createAdmin = async () => {
     const adminData = {
       username: 'admin',
       email: 'admin@nuttfestas.com',
-      password: 'admin123',
+      password: 'Nutt123',
       role: 'admin'
     };
     
