@@ -28,7 +28,7 @@ async function uploadSiteImages() {
             {
                 name: 'logo',
                 description: 'Logo da empresa',
-                filePath: path.join(__dirname, '../../img/logo.png')
+                filePath: path.join(__dirname, '../../img/logo.svg')
             }
         ];
 

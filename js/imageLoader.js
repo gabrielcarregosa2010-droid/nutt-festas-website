@@ -28,7 +28,7 @@ class ImageLoader {
         const criticalImages = [
             { name: 'about', selector: '.about-image img', alt: 'Nutt Festas - Quem Somos', fallback: 'img/about.jpg?v=4' },
             { name: 'home', selector: '.hero-section', type: 'background', fallback: 'img/home.jpg?v=4' },
-            { name: 'logo', selector: '.logo img', alt: 'Nutt Festas Logo', fallback: 'img/logo.png' }
+            { name: 'logo', selector: '.logo img', alt: 'Nutt Festas Logo', fallback: 'img/logo.svg' }
         ];
 
         for (const imageConfig of criticalImages) {
