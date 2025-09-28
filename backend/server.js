@@ -274,22 +274,25 @@ app.use((error, req, res, next) => {
   });
 });
 
-// Iniciar servidor
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor rodando na porta ${PORT}`);
-  console.log(`📊 Ambiente: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
-});
+// Iniciar servidor apenas se não estiver sendo usado como módulo (Vercel)
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`🚀 Servidor rodando na porta ${PORT}`);
+    console.log(`📊 Ambiente: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
+  });
 
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM recebido, encerrando servidor graciosamente...');
-  process.exit(0);
-});
+  // Graceful shutdown
+  process.on('SIGTERM', () => {
+    console.log('SIGTERM recebido, encerrando servidor graciosamente...');
+    process.exit(0);
+  });
 
-process.on('SIGINT', () => {
-  console.log('SIGINT recebido, encerrando servidor graciosamente...');
-  process.exit(0);
-});
+  process.on('SIGINT', () => {
+    console.log('SIGINT recebido, encerrando servidor graciosamente...');
+    process.exit(0);
+  });
+}
 
+// Exportar app para uso como função serverless
 module.exports = app;
