@@ -1,18 +1,3 @@
-const jwt = require('jsonwebtoken');
-
-// Função para gerar token JWT
-function generateToken(user) {
-  return jwt.sign(
-    { 
-      id: user.id || 'admin',
-      username: user.username,
-      role: user.role || 'admin'
-    },
-    process.env.JWT_SECRET || 'nutt-festas-secret-key-2024',
-    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
-  );
-}
-
 module.exports = async (req, res) => {
   // Configurar CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -28,12 +13,15 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     return res.status(405).json({
       success: false,
-      message: 'Método não permitido'
+      message: 'Método não permitido. Use POST.'
     });
   }
 
   try {
     const { username, password } = req.body;
+
+    // Log para debug
+    console.log('Login attempt:', { username, hasPassword: !!password });
 
     // Validação básica
     if (!username || !password) {
@@ -43,30 +31,31 @@ module.exports = async (req, res) => {
       });
     }
 
-    // Credenciais de fallback para admin
-    const adminCredentials = {
-      username: 'admin',
-      password: 'NuttFestas2024!@#$'
-    };
+    // Credenciais de admin (hardcoded para simplicidade)
+    const ADMIN_USERNAME = 'admin';
+    const ADMIN_PASSWORD = 'NuttFestas2024!@#$';
 
     // Verificar credenciais
-    if (username === adminCredentials.username && password === adminCredentials.password) {
-      const user = {
-        id: 'admin',
+    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+      // Gerar token simples (timestamp + dados do usuário em base64)
+      const tokenData = {
+        id: 'admin-001',
         username: 'admin',
-        role: 'admin'
+        role: 'admin',
+        loginTime: new Date().toISOString(),
+        expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 dias
       };
 
-      const token = generateToken(user);
+      const token = Buffer.from(JSON.stringify(tokenData)).toString('base64');
 
       return res.status(200).json({
         success: true,
-        message: 'Login realizado com sucesso',
-        token,
+        message: 'Login realizado com sucesso!',
+        token: token,
         user: {
-          id: user.id,
-          username: user.username,
-          role: user.role
+          id: tokenData.id,
+          username: tokenData.username,
+          role: tokenData.role
         }
       });
     } else {
@@ -79,7 +68,8 @@ module.exports = async (req, res) => {
     console.error('Erro no login:', error);
     return res.status(500).json({
       success: false,
-      message: 'Erro interno do servidor'
+      message: 'Erro interno do servidor',
+      error: error.message
     });
   }
 };
