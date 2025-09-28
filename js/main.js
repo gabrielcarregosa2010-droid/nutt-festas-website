@@ -1,11 +1,49 @@
+// Função para mostrar notificações
+function showNotification(message, type = 'info') {
+    // Criar elemento de notificação
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    
+    let icon = 'fas fa-info-circle';
+    if (type === 'success') icon = 'fas fa-check-circle';
+    if (type === 'error') icon = 'fas fa-exclamation-circle';
+    if (type === 'warning') icon = 'fas fa-exclamation-triangle';
+    
+    notification.innerHTML = `
+        <i class="${icon}"></i>
+        <p>${message}</p>
+        <button class="close-btn"><i class="fas fa-times"></i></button>
+    `;
+    
+    // Adicionar ao DOM
+    document.body.appendChild(notification);
+    
+    // Remover após 5 segundos
+    setTimeout(() => {
+        notification.classList.add('fade-out');
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 300);
+    }, 5000);
+    
+    // Fechar ao clicar no botão
+    notification.querySelector('.close-btn').addEventListener('click', () => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Menu mobile
     const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
-    const navMenu = document.querySelector('nav ul');
+    const nav = document.querySelector('nav');
     
-    if (mobileMenuBtn) {
+    if (mobileMenuBtn && nav) {
         mobileMenuBtn.addEventListener('click', function() {
-            navMenu.classList.toggle('show');
+            nav.classList.toggle('show');
         });
     }
     
@@ -15,8 +53,8 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             
             // Fechar menu mobile se estiver aberto
-            if (navMenu.classList.contains('show')) {
-                navMenu.classList.remove('show');
+            if (nav.classList.contains('show')) {
+                nav.classList.remove('show');
             }
             
             const targetId = this.getAttribute('href');

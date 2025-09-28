@@ -47,8 +47,23 @@ class ApiService {
         status: response.status,
         statusText: response.statusText,
         ok: response.ok,
+        contentType: response.headers.get('content-type'),
         timestamp: new Date().toISOString()
       });
+      
+      // Verificar se a resposta é JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('❌ API Response is not JSON:', {
+          url,
+          status: response.status,
+          contentType,
+          responseText: text.substring(0, 200) + (text.length > 200 ? '...' : ''),
+          timestamp: new Date().toISOString()
+        });
+        throw new Error(`Servidor retornou ${response.status}: ${response.statusText}`);
+      }
       
       const data = await response.json();
 
