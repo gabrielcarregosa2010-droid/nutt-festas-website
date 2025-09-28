@@ -164,8 +164,11 @@ header h1:hover {
 .hero-section {
     /* Fallback gradient caso a imagem não carregue */
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    /* Imagem principal com fallback */
-    background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('../img/home.jpg?v=4') no-repeat center center/cover;
+    /* Imagem principal com overlay escuro */
+    background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('../img/home.jpg?v=4');
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
     color: white;
     text-align: center;
     padding: 100px 0;
@@ -794,7 +797,7 @@ footer {
 /* Estados de carregamento */
 .about-image img,
 .logo img {
-    opacity: 0;
+    opacity: 1;
     transition: opacity 0.3s ease-in-out;
 }
 
@@ -803,8 +806,8 @@ footer {
     opacity: 1;
 }
 
-/* Placeholder durante carregamento */
-.about-image img:not(.image-loaded) {
+/* Placeholder durante carregamento - apenas se necessário */
+.about-image img.loading {
     background: linear-gradient(45deg, #f0f0f0 25%, transparent 25%), 
                 linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), 
                 linear-gradient(45deg, transparent 75%, #f0f0f0 75%), 

@@ -8,6 +8,7 @@ class ImageLoader {
         this.imageCache = new Map();
         this.retryAttempts = 3;
         this.retryDelay = 1000;
+        this.apiBaseUrl = window.location.origin;
         this.init();
     }
 
@@ -25,35 +26,152 @@ class ImageLoader {
      */
     async loadCriticalImages() {
         const criticalImages = [
-            { selector: '.about-image img', src: 'img/about.jpg?v=4', alt: 'Nutt Festas - Quem Somos' },
-            { selector: '.hero-section', type: 'background', src: 'img/home.jpg?v=4' },
-            { selector: '.logo img', src: 'img/logo.png', alt: 'Nutt Festas Logo' }
+            { name: 'about', selector: '.about-image img', alt: 'Nutt Festas - Quem Somos', fallback: 'img/about.jpg?v=4' },
+            { name: 'home', selector: '.hero-section', type: 'background', fallback: 'img/home.jpg?v=4' },
+            { name: 'logo', selector: '.logo img', alt: 'Nutt Festas Logo', fallback: 'img/logo.png' }
         ];
 
         for (const imageConfig of criticalImages) {
-            await this.loadImageWithFallback(imageConfig);
+            await this.loadImageFromAPI(imageConfig);
+        }
+    }
+
+    /**
+     * Carrega uma imagem da API com fallback
+     */
+    async loadImageFromAPI(imageConfig) {
+        const element = document.querySelector(imageConfig.selector);
+        if (!element) {
+            console.warn(`Elemento não encontrado: ${imageConfig.selector}`);
+            return;
+        }
+
+        // Adicionar classe de loading
+        element.classList.add('loading');
+
+        try {
+            // Primeiro, tentar carregar da API
+            const apiUrl = `${this.apiBaseUrl}/api/site-images/${imageConfig.name}`;
+            const apiSuccess = await this.tryLoadImage(apiUrl, element, imageConfig);
+            
+            if (apiSuccess) {
+                this.onImageLoad(element, imageConfig);
+                return;
+            }
+
+            // Se a API falhar, usar fallback local
+            console.log(`API falhou para ${imageConfig.name}, usando fallback local`);
+            const fallbackSuccess = await this.tryLoadImage(imageConfig.fallback, element, imageConfig);
+            
+            if (fallbackSuccess) {
+                this.onImageLoad(element, imageConfig);
+                return;
+            }
+
+            // Se o fallback também falhar, tentar com cache busting
+            const cacheBustSrc = this.addCacheBuster(imageConfig.fallback);
+            const retrySuccess = await this.tryLoadImage(cacheBustSrc, element, imageConfig);
+            
+            if (retrySuccess) {
+                this.onImageLoad(element, imageConfig);
+                return;
+            }
+
+            // Se tudo falhar, mostrar erro
+            this.onImageError(element, imageConfig);
+
+        } catch (error) {
+            console.error(`Erro ao carregar imagem ${imageConfig.name}:`, error);
+            this.onImageError(element, imageConfig);
         }
     }
 
     /**
      * Carrega uma imagem com sistema de fallback
      */
-    async loadImageWithFallback(config) {
-        const { selector, src, alt, type = 'img' } = config;
-        
+    async loadImageWithFallback(imageConfig) {
+        const element = document.querySelector(imageConfig.selector);
+        if (!element) {
+            console.warn(`Elemento não encontrado: ${imageConfig.selector}`);
+            return;
+        }
+
+        // Adicionar classe de loading
+        element.classList.add('loading');
+
         try {
-            // Tenta carregar a imagem
+            // Tentar carregar a imagem principal
+            const success = await this.tryLoadImage(imageConfig.src, element, imageConfig);
+            
+            if (success) {
+                this.onImageLoad(element, imageConfig);
+                return;
+            }
+
+            // Se falhar, tentar com cache busting
+            const cacheBustSrc = this.addCacheBuster(imageConfig.src);
+            const retrySuccess = await this.tryLoadImage(cacheBustSrc, element, imageConfig);
+            
+            if (retrySuccess) {
+                this.onImageLoad(element, imageConfig);
+                return;
+            }
+
+            // Se ainda falhar, usar fallback
+            this.onImageError(element, imageConfig);
+
+        } catch (error) {
+            console.error(`Erro ao carregar imagem ${imageConfig.src}:`, error);
+            this.onImageError(element, imageConfig);
+        }
+    }
+
+    /**
+     * Tenta carregar uma imagem
+     */
+    async tryLoadImage(src, element, imageConfig) {
+        try {
             await this.preloadImage(src);
-            
-            // Se sucesso, aplica a imagem
-            this.applyImage(selector, src, alt, type);
-            
+            this.applyImage(imageConfig.selector || element.id, src, imageConfig.alt, imageConfig.type);
+            return true;
         } catch (error) {
             console.warn(`Falha ao carregar imagem: ${src}`, error);
-            
-            // Tenta versões alternativas
-            await this.tryAlternativeVersions(config);
+            return false;
         }
+    }
+
+    /**
+     * Callback quando imagem carrega com sucesso
+     */
+    onImageLoad(element, imageConfig) {
+        element.classList.remove('loading');
+        element.classList.add('image-loaded');
+        console.log(`Imagem carregada com sucesso: ${imageConfig.name || imageConfig.src}`);
+    }
+
+    /**
+     * Callback quando imagem falha ao carregar
+     */
+    onImageError(element, imageConfig) {
+        element.classList.remove('loading');
+        element.classList.add('image-error');
+        
+        // Aplica fallback
+        if (imageConfig.type === 'background') {
+            element.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        } else {
+            const placeholderSvg = `data:image/svg+xml;base64,${btoa(`
+                <svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="100%" height="100%" fill="#f0f0f0"/>
+                    <text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="#999">
+                        Imagem não disponível
+                    </text>
+                </svg>
+            `)}`;
+            element.src = placeholderSvg;
+        }
+        
+        console.error(`Erro ao carregar imagem: ${imageConfig.name || imageConfig.src}`);
     }
 
     /**

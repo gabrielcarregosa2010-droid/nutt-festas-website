@@ -16,6 +16,7 @@ console.log('JWT_SECRET definida:', !!process.env.JWT_SECRET);
 // Importar rotas
 const authRoutes = require('./routes/auth');
 const galleryRoutes = require('./routes/gallery');
+const siteImagesRoutes = require('./routes/siteImages');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -128,6 +129,7 @@ app.use((req, res, next) => {
 // Rotas da API (com verificação de MongoDB)
 app.use('/api/auth', checkMongoDB, authRoutes);
 app.use('/api/gallery', checkMongoDB, galleryRoutes);
+app.use('/api/site-images', siteImagesRoutes); // Não precisa de checkMongoDB pois tem fallback
 
 // Rota de health check
 app.get('/api/health', (req, res) => {
