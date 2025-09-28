@@ -1,5 +1,4 @@
-// Função de teste simples para verificar se o Vercel está funcionando
-module.exports = async (req, res) => {
+export default function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Content-Type', 'application/json');
   
@@ -14,4 +13,4 @@ module.exports = async (req, res) => {
     method: req.method,
     url: req.url
   });
-};
+}
