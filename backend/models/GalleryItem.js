@@ -15,11 +15,17 @@ const galleryItemSchema = new mongoose.Schema({
   },
   fileData: {
     type: String,
-    required: [true, 'Dados do arquivo são obrigatórios']
+    required: function() {
+      // fileData é obrigatório apenas se não há images
+      return !this.images || this.images.length === 0;
+    }
   },
   fileType: {
     type: String,
-    required: [true, 'Tipo do arquivo é obrigatório'],
+    required: function() {
+      // fileType é obrigatório apenas se há fileData
+      return !!this.fileData;
+    },
     enum: {
       values: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm'],
       message: 'Tipo de arquivo não suportado'
@@ -27,7 +33,10 @@ const galleryItemSchema = new mongoose.Schema({
   },
   fileSize: {
     type: Number,
-    required: true,
+    required: function() {
+      // fileSize é obrigatório apenas se há fileData
+      return !!this.fileData;
+    },
     max: [10485760, 'Arquivo muito grande (máximo 10MB)'] // 10MB
   },
   images: [{
@@ -66,6 +75,9 @@ galleryItemSchema.pre('save', function(next) {
     // Calcular tamanho aproximado do arquivo base64
     const base64Size = this.fileData.length * (3/4);
     this.fileSize = Math.round(base64Size);
+  } else if (this.images && this.images.length > 0) {
+    // Para itens com apenas images, definir fileSize como 0
+    this.fileSize = 0;
   }
   next();
 });
