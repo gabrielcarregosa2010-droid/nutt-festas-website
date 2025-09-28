@@ -92,10 +92,13 @@ class ApiService {
         timestamp: new Date().toISOString()
       });
       
-      // Se token expirou, limpar e redirecionar para login
-      if (error.message.includes('Token expirado') || error.message.includes('Token inválido')) {
+      // Se token expirou ou é antigo, limpar e redirecionar para login
+      if (error.message.includes('Token expirado') || 
+          error.message.includes('Token inválido') || 
+          error.message.includes('faça login novamente')) {
+        console.log('🔄 Token expirado/inválido - fazendo logout automático');
         this.clearAuth();
-        if (window.location.pathname.includes('admin')) {
+        if (window.location.pathname.includes('admin') && !window.location.pathname.includes('login')) {
           window.location.href = '/admin/login.html';
         }
       }
@@ -212,13 +215,19 @@ function showApiError(error, defaultMessage = 'Erro na operação') {
 async function checkApiConnection() {
   try {
     const health = await api.healthCheck();
-    if (!health.success) {
+    if (!health || !health.success) {
+      console.warn('⚠️ API Health Check falhou:', health);
       showNotification('Servidor indisponível. Algumas funcionalidades podem não funcionar.', 'error');
       return false;
     }
+    console.log('✅ API conectada com sucesso');
     return true;
   } catch (error) {
-    showNotification('Não foi possível conectar ao servidor. Verifique sua conexão.', 'error');
+    console.error('❌ Erro na verificação de conectividade:', error);
+    // Só mostrar notificação se for um erro real de rede
+    if (error.message.includes('fetch') || error.message.includes('network') || error.message.includes('Failed to fetch')) {
+      showNotification('Não foi possível conectar ao servidor. Verifique sua conexão.', 'error');
+    }
     return false;
   }
 }

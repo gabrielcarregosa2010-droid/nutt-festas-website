@@ -19,6 +19,16 @@ const authenticateToken = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     console.log('Token decodificado:', { id: decoded.id, username: decoded.username, role: decoded.role });
     
+    // Verificar se é um token antigo sem username/role
+    if (!decoded.username || !decoded.role) {
+      console.warn('Token antigo detectado - forçando logout');
+      return res.status(401).json({
+        success: false,
+        message: 'Token expirado - faça login novamente',
+        code: 'TOKEN_OUTDATED'
+      });
+    }
+    
     // Verificar se MongoDB está conectado
     console.log('MongoDB readyState:', mongoose.connection.readyState);
     if (mongoose.connection.readyState !== 1) {
