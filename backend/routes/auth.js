@@ -17,7 +17,8 @@ router.post('/login', validateLogin, async (req, res) => {
       console.warn('MongoDB não conectado - usando credenciais de fallback');
       
       // Credenciais de teste para desenvolvimento/produção sem DB
-      if ((username === 'admin' || username === 'admin@nuttfestas.com') && password === 'admin123') {
+      const fallbackPassword = process.env.FALLBACK_ADMIN_PASSWORD || 'NuttFestas2024!@#$';
+      if ((username === 'admin' || username === 'admin@nuttfestas.com') && password === fallbackPassword) {
         const userData = { 
           id: 'fallback-admin-id', 
           username: 'admin',
@@ -96,9 +97,19 @@ router.post('/login', validateLogin, async (req, res) => {
 
   } catch (error) {
     console.error('Erro no login:', error);
+    
+    // Log detalhado do erro para debug
+    console.error('Stack trace:', error.stack);
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      code: error.code
+    });
+    
     res.status(500).json({
       success: false,
-      message: 'Erro interno do servidor'
+      message: 'Erro interno do servidor',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Erro interno'
     });
   }
 });

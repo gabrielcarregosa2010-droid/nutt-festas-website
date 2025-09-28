@@ -675,12 +675,97 @@
 
 
 @media (max-width: 480px) {
+    .admin-header {
+        padding: 1rem 0.5rem;
+    }
+    
+    .admin-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .admin-nav ul li {
+        margin: 0.5rem;
+    }
+    
+    .admin-nav ul li a {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+    
+    .admin-actions {
+        padding: 1rem 0.5rem;
+    }
+    
+    .admin-actions .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+        padding: 0.75rem;
+        font-size: 0.9rem;
+    }
+    
     .gallery-grid {
         grid-template-columns: 1fr;
+        gap: 1rem;
+        padding: 0 0.5rem;
+    }
+    
+    .gallery-item {
+        padding: 1rem;
+    }
+    
+    .gallery-item img {
+        max-height: 200px;
+    }
+    
+    .gallery-item h3 {
+        font-size: 1.1rem;
+        margin: 0.5rem 0;
+    }
+    
+    .gallery-item p {
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+    
+    .gallery-item .btn {
+        width: 100%;
+        margin: 0.25rem 0;
+        padding: 0.5rem;
+        font-size: 0.8rem;
     }
     
     .modal-content {
-        margin: 20% auto;
+        margin: 10% auto;
         width: 95%;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+    
+    .modal-content h2 {
+        font-size: 1.3rem;
+        margin-bottom: 1rem;
+    }
+    
+    .modal-content .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .modal-content input,
+    .modal-content textarea,
+    .modal-content select {
+        font-size: 16px; /* Evita zoom no iOS */
+        padding: 0.75rem;
+    }
+    
+    .modal-content .btn {
+        width: 100%;
+        margin: 0.5rem 0;
+        padding: 0.75rem;
+    }
+    
+    .close {
+        font-size: 2rem;
+        top: 10px;
+        right: 15px;
     }
 }
