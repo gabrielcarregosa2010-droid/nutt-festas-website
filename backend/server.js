@@ -77,7 +77,7 @@ app.use(helmet({
       scriptSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https:", "http:"],
       fontSrc: ["'self'", "https:", "data:"],
-      connectSrc: ["'self'", "http://localhost:3000", "https://localhost:3000"],
+      connectSrc: ["'self'", "http://localhost:3000", "https://localhost:3000", "https://*.vercel.app"],
       frameSrc: ["'self'"],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
@@ -95,11 +95,13 @@ const corsOptions = {
     const allowedOrigins = [
       'http://localhost:3000',
       'http://localhost:5500',
-      'http://127.0.0.1:5500',
-      process.env.FRONTEND_URL
-    ].filter(Boolean);
+      'http://127.0.0.1:5500'
+    ];
     
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    // Permitir qualquer domínio do Vercel ou se FRONTEND_URL for *
+    if (process.env.FRONTEND_URL === '*' || 
+        origin.includes('.vercel.app') || 
+        allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
       callback(new Error('Não permitido pelo CORS'));
