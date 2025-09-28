@@ -2,109 +2,9 @@
 document.addEventListener('DOMContentLoaded', async function() {
     const galleryContainer = document.getElementById('gallery');
     
-    // Imagens de exemplo da galeria com múltiplas fotos por item
-    const galleryItems = [
-        {
-            id: 1,
-            title: 'Festa de Aniversário Infantil',
-            caption: 'Decoração temática com balões e personagens favoritos',
-            images: [
-                {
-                    src: 'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=800&h=600&fit=crop',
-                    alt: 'Vista geral da festa infantil'
-                },
-                {
-                    src: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop',
-                    alt: 'Mesa de doces decorada'
-                },
-                {
-                    src: 'https://images.unsplash.com/photo-1464207687429-7505649dae38?w=800&h=600&fit=crop',
-                    alt: 'Área de brincadeiras'
-                }
-            ]
-        },
-        {
-            id: 2,
-            title: 'Casamento Romântico',
-            caption: 'Decoração elegante com flores e luzes',
-            images: [
-                {
-                    src: 'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=800&h=600&fit=crop',
-                    alt: 'Cerimônia de casamento'
-                },
-                {
-                    src: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=800&h=600&fit=crop',
-                    alt: 'Mesa dos noivos'
-                }
-            ]
-        },
-        {
-            id: 3,
-            title: 'Festa de 15 Anos',
-            caption: 'Decoração sofisticada em tons de rosa e dourado',
-            images: [
-                {
-                    src: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800&h=600&fit=crop',
-                    alt: 'Salão principal da festa'
-                },
-                {
-                    src: 'https://images.unsplash.com/photo-1481391319762-47dff72954d9?w=800&h=600&fit=crop',
-                    alt: 'Mesa de doces elegante'
-                },
-                {
-                    src: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&h=600&fit=crop',
-                    alt: 'Pista de dança'
-                }
-            ]
-        },
-        {
-            id: 4,
-            title: 'Festa Corporativa',
-            caption: 'Ambiente profissional com decoração moderna',
-            images: [
-                {
-                    src: 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=800&h=600&fit=crop',
-                    alt: 'Evento corporativo principal'
-                }
-            ]
-        },
-        {
-            id: 5,
-            title: 'Festa de Formatura',
-            caption: 'Celebração especial com decoração temática',
-            images: [
-                {
-                    src: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&h=600&fit=crop',
-                    alt: 'Cerimônia de formatura'
-                },
-                {
-                    src: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&h=600&fit=crop',
-                    alt: 'Mesa de celebração'
-                }
-            ]
-        },
-        {
-            id: 6,
-            title: 'Festa de Batizado',
-            caption: 'Decoração delicada em tons pastéis',
-            images: [
-                {
-                    src: 'https://images.unsplash.com/photo-1505236858219-8359eb29e329?w=800&h=600&fit=crop',
-                    alt: 'Decoração do batizado'
-                },
-                {
-                    src: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=600&fit=crop',
-                    alt: 'Mesa de doces do batizado'
-                },
-                {
-                    src: 'https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=800&h=600&fit=crop',
-                    alt: 'Área de convivência'
-                }
-            ]
-        }
-    ];
+    // Dados estáticos removidos - agora todos os itens vêm do banco de dados
     
-    // Tentar carregar da API primeiro, se falhar usar imagens estáticas
+    // Carregar itens da galeria do banco de dados via API
     try {
         const api = new ApiService();
         const response = await api.getGalleryItems({ 
@@ -116,11 +16,22 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (response.success && response.data.items.length > 0) {
             renderGallery(response.data.items, true);
         } else {
-            renderGallery(galleryItems, false);
+            // Mostrar mensagem quando não há itens na galeria
+            galleryContainer.innerHTML = `
+                <div class="no-items-message">
+                    <h3>Galeria vazia</h3>
+                    <p>Nenhum item foi encontrado na galeria. Use o painel administrativo para adicionar novos itens.</p>
+                </div>
+            `;
         }
     } catch (error) {
-        console.log('API não disponível, usando galeria estática');
-        renderGallery(galleryItems, false);
+        console.error('Erro ao carregar galeria:', error);
+        galleryContainer.innerHTML = `
+            <div class="error-message">
+                <h3>Erro ao carregar galeria</h3>
+                <p>Não foi possível conectar com o servidor. Tente novamente mais tarde.</p>
+            </div>
+        `;
     }
     
     function renderGallery(items, isFromAPI = false) {

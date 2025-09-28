@@ -89,10 +89,24 @@ function renderGalleryItems() {
         
         // Determinar se é imagem ou vídeo
         let mediaElement = '';
-        if (item.fileType.startsWith('image/')) {
-            mediaElement = `<img src="${item.fileData}" alt="${item.title}">`;
-        } else if (item.fileType.startsWith('video/')) {
-            mediaElement = `<video controls><source src="${item.fileData}" type="${item.fileType}"></video>`;
+        
+        // Verificar se tem fileData (item único) ou images (múltiplas imagens)
+        if (item.fileData && item.fileType) {
+            // Item com arquivo único
+            if (item.fileType.startsWith('image/')) {
+                mediaElement = `<img src="${item.fileData}" alt="${item.title}">`;
+            } else if (item.fileType.startsWith('video/')) {
+                mediaElement = `<video controls><source src="${item.fileData}" type="${item.fileType}"></video>`;
+            }
+        } else if (item.images && item.images.length > 0) {
+            // Item com múltiplas imagens - mostrar a primeira como thumbnail
+            const firstImage = item.images[0];
+            mediaElement = `
+                <div class="gallery-thumbnail">
+                    <img src="${firstImage.src}" alt="${firstImage.alt}">
+                    ${item.images.length > 1 ? `<span class="image-count">${item.images.length} fotos</span>` : ''}
+                </div>
+            `;
         }
         
         itemElement.innerHTML = `
@@ -146,18 +160,41 @@ function openEditItemModal(id) {
     filePreview.innerHTML = '';
     filePreview.style.display = 'block';
     
-    if (item.fileType.startsWith('image/')) {
-        filePreview.innerHTML = `<img src="${item.fileData}" alt="${item.title}">`;
-    } else if (item.fileType.startsWith('video/')) {
-        filePreview.innerHTML = `<video controls><source src="${item.fileData}" type="${item.fileType}"></video>`;
+    // Verificar se tem fileData (item único) ou images (múltiplas imagens)
+    if (item.fileData && item.fileType) {
+        // Item com arquivo único
+        if (item.fileType.startsWith('image/')) {
+            filePreview.innerHTML = `<img src="${item.fileData}" alt="${item.title}">`;
+        } else if (item.fileType.startsWith('video/')) {
+            filePreview.innerHTML = `<video controls><source src="${item.fileData}" type="${item.fileType}"></video>`;
+        }
+        
+        fileData = {
+            data: item.fileData,
+            type: item.fileType
+        };
+    } else if (item.images && item.images.length > 0) {
+        // Item com múltiplas imagens - mostrar todas as imagens
+        const imagesHtml = item.images.map((img, index) => 
+            `<div class="image-preview-item">
+                <img src="${img.src}" alt="${img.alt}">
+                <p>Imagem ${index + 1}: ${img.alt}</p>
+            </div>`
+        ).join('');
+        
+        filePreview.innerHTML = `
+            <div class="multiple-images-preview">
+                <p><strong>${item.images.length} imagens neste item:</strong></p>
+                <div class="images-grid">${imagesHtml}</div>
+                <p><em>Nota: Para editar as imagens, você precisará excluir e recriar o item.</em></p>
+            </div>
+        `;
+        
+        // Para itens com múltiplas imagens, não definimos fileData
+        fileData = null;
     }
     
     currentItemId = item.id;
-    fileData = {
-        data: item.fileData,
-        type: item.fileType
-    };
-    
     itemModal.style.display = 'block';
 }
 

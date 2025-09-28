@@ -30,6 +30,16 @@ const galleryItemSchema = new mongoose.Schema({
     required: true,
     max: [10485760, 'Arquivo muito grande (máximo 10MB)'] // 10MB
   },
+  images: [{
+    src: {
+      type: String,
+      required: true
+    },
+    alt: {
+      type: String,
+      required: true
+    }
+  }],
   isActive: {
     type: Boolean,
     default: true
