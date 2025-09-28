@@ -162,12 +162,17 @@ header h1:hover {
 
 /* Hero Section */
 .hero-section {
+    /* Fallback gradient caso a imagem não carregue */
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    /* Imagem principal com fallback */
     background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('../img/home.jpg?v=4') no-repeat center center/cover;
     color: white;
     text-align: center;
     padding: 100px 0;
     position: relative;
     overflow: hidden;
+    /* Transição suave para carregamento */
+    transition: background-image 0.3s ease-in-out;
 }
 
 .hero-section::before {
@@ -782,6 +787,67 @@ footer {
     .gallery {
         grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     }
+}
+
+/* ===== SISTEMA DE CARREGAMENTO DE IMAGENS ===== */
+
+/* Estados de carregamento */
+.about-image img,
+.logo img {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.about-image img.image-loaded,
+.logo img.image-loaded {
+    opacity: 1;
+}
+
+/* Placeholder durante carregamento */
+.about-image img:not(.image-loaded) {
+    background: linear-gradient(45deg, #f0f0f0 25%, transparent 25%), 
+                linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #f0f0f0 75%), 
+                linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    animation: loading-pattern 1s linear infinite;
+}
+
+@keyframes loading-pattern {
+    0% { background-position: 0 0, 0 10px, 10px -10px, -10px 0px; }
+    100% { background-position: 20px 20px, 20px 30px, 30px 10px, 10px 20px; }
+}
+
+/* Fallback para imagens que falharam */
+.image-fallback {
+    border: 2px dashed #ddd;
+    background-color: #f9f9f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+    font-style: italic;
+}
+
+/* Otimizações para performance */
+.about-image img,
+.logo img {
+    will-change: opacity;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+}
+
+/* Lazy loading suporte */
+.lazy-loading {
+    opacity: 0.5;
+    filter: blur(2px);
+    transition: opacity 0.3s, filter 0.3s;
+}
+
+.lazy-loaded {
+    opacity: 1;
+    filter: blur(0);
 }
 
 @media (max-width: 480px) {
