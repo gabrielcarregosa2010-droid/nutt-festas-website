@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
+const mongoose = require('mongoose');
 const { generateToken, authenticateToken, requireAdmin } = require('../middleware/auth');
 const { validateLogin, validateUserCreation } = require('../middleware/validation');
 
@@ -11,27 +12,27 @@ router.post('/login', validateLogin, async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    // MODO DESENVOLVIMENTO: Login sem MongoDB
-    if (process.env.NODE_ENV === 'development' && !require('mongoose').connection.readyState) {
-      // Credenciais de teste para desenvolvimento
+    // MODO DESENVOLVIMENTO OU PRODUÇÃO SEM MONGODB: Login sem MongoDB
+    if (mongoose.connection.readyState !== 1) {
+      console.warn('MongoDB não conectado - usando credenciais de fallback');
+      
+      // Credenciais de teste para desenvolvimento/produção sem DB
       if ((username === 'admin' || username === 'admin@nuttfestas.com') && password === 'admin123') {
-        const token = generateToken({ 
-          id: 'dev-admin-id', 
-          username: 'admin', 
+        const userData = { 
+          id: 'fallback-admin-id', 
+          username: 'admin',
+          email: 'admin@nuttfestas.com',
           role: 'admin' 
-        });
+        };
+        
+        const token = generateToken(userData);
         
         return res.json({
           success: true,
-          message: 'Login realizado com sucesso (modo desenvolvimento)',
+          message: 'Login realizado com sucesso (modo fallback)',
           data: {
             token,
-            user: {
-              id: 'dev-admin-id',
-              username: 'admin',
-              email: 'admin@nuttfestas.com',
-              role: 'admin'
-            }
+            user: userData
           }
         });
       } else {
@@ -68,8 +69,15 @@ router.post('/login', validateLogin, async (req, res) => {
     // Atualizar último login
     await user.updateLastLogin();
 
-    // Gerar token
-    const token = generateToken(user._id);
+    // Gerar token com dados completos
+    const userData = {
+      id: user._id,
+      username: user.username,
+      email: user.email,
+      role: user.role
+    };
+    
+    const token = generateToken(userData);
 
     res.json({
       success: true,

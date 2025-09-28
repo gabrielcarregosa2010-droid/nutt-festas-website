@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const SiteImage = require('../models/SiteImage');
+const mongoose = require('mongoose');
 const { authenticateToken } = require('../middleware/auth');
 const fs = require('fs').promises;
 const path = require('path');
@@ -22,25 +23,30 @@ router.get('/:name', async (req, res) => {
       });
     }
 
-    // Primeiro, tentar buscar no banco de dados
-    const siteImage = await SiteImage.findActiveByName(name);
-    
-    if (siteImage) {
-      // Converter base64 para buffer
-      const imageBuffer = Buffer.from(siteImage.fileData, 'base64');
+    // Verificar se MongoDB está conectado
+    if (mongoose.connection.readyState === 1) {
+      // Primeiro, tentar buscar no banco de dados
+      const siteImage = await SiteImage.findActiveByName(name);
       
-      // Definir headers apropriados
-      res.set({
-        'Content-Type': siteImage.fileType,
-        'Content-Length': imageBuffer.length,
-        'Cache-Control': 'public, max-age=86400', // Cache por 24 horas
-        'ETag': `"${siteImage.version}-${siteImage.updatedAt.getTime()}"`
-      });
-      
-      return res.send(imageBuffer);
+      if (siteImage) {
+        // Converter base64 para buffer
+        const imageBuffer = Buffer.from(siteImage.fileData, 'base64');
+        
+        // Definir headers apropriados
+        res.set({
+          'Content-Type': siteImage.fileType,
+          'Content-Length': imageBuffer.length,
+          'Cache-Control': 'public, max-age=86400', // Cache por 24 horas
+          'ETag': `"${siteImage.version}-${siteImage.updatedAt.getTime()}"`
+        });
+        
+        return res.send(imageBuffer);
+      }
+    } else {
+      console.warn('MongoDB não conectado - usando apenas arquivos locais para imagens');
     }
 
-    // Se não encontrar no banco, tentar arquivo local como fallback
+    // Se não encontrar no banco ou MongoDB não conectado, tentar arquivo local como fallback
     const fallbackPaths = [
       path.join(__dirname, '../../img', `${name}.jpg`),
       path.join(__dirname, '../../img', `${name}.png`),
@@ -113,6 +119,14 @@ router.post('/:name', authenticateToken, async (req, res) => {
       });
     }
 
+    // Verificar se MongoDB está conectado
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({
+        success: false,
+        message: 'Serviço de upload temporariamente indisponível - MongoDB não conectado'
+      });
+    }
+
     // Desativar imagem anterior se existir
     await SiteImage.updateMany(
       { name, isActive: true },
@@ -163,6 +177,15 @@ router.post('/:name', authenticateToken, async (req, res) => {
  */
 router.get('/', authenticateToken, async (req, res) => {
   try {
+    // Verificar se MongoDB está conectado
+    if (mongoose.connection.readyState !== 1) {
+      return res.json({
+        success: true,
+        data: [],
+        message: 'Lista de imagens temporariamente indisponível - MongoDB não conectado'
+      });
+    }
+
     const images = await SiteImage.find({ isActive: true })
       .select('-fileData') // Não retornar os dados binários na listagem
       .sort({ name: 1 });
