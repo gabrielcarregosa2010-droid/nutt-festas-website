@@ -1,4 +1,4 @@
-export default function handler(req, res) {
+module.exports = (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Content-Type', 'application/json');
   
@@ -13,4 +13,4 @@ export default function handler(req, res) {
     method: req.method,
     url: req.url
   });
-}
+};
