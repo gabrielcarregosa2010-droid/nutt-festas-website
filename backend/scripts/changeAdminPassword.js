@@ -27,8 +27,8 @@ const changeAdminPassword = async () => {
       process.exit(1);
     }
     
-    // Gerar nova senha segura
-    const newPassword = generateSecurePassword();
+    // Usar senha específica solicitada
+    const newPassword = 'Nutt123';
     
     // Atualizar senha
     admin.password = newPassword;
