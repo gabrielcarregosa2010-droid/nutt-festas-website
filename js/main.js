@@ -76,44 +76,47 @@ document.addEventListener('DOMContentLoaded', function() {
         contactForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
-            // Simulação de envio de formulário
-            const formData = new FormData(contactForm);
-            const formValues = {};
+            // Obter dados do formulário
+            const name = document.getElementById('name').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const message = document.getElementById('message').value.trim();
             
-            formData.forEach((value, key) => {
-                formValues[key] = value;
-            });
+            // Validação básica
+            if (!name || !message) {
+                showNotification('Por favor, preencha todos os campos obrigatórios.', 'error');
+                return;
+            }
             
-            // Aqui você adicionaria o código para enviar os dados para um servidor
-            // Por enquanto, apenas mostramos uma mensagem de sucesso
+            // Formatar mensagem para WhatsApp
+            let whatsappMessage = `*Olá! Tenho interesse nos serviços da Nutt Festas*\n\n`;
+            whatsappMessage += `*Nome:* ${name}\n`;
             
-            // Criar elemento de notificação
-            const notification = document.createElement('div');
-            notification.className = 'notification success';
-            notification.innerHTML = `
-                <i class="fas fa-check-circle"></i>
-                <p>Mensagem enviada com sucesso! Entraremos em contato em breve.</p>
-                <button class="close-btn"><i class="fas fa-times"></i></button>
-            `;
+            if (phone) {
+                whatsappMessage += `*Telefone:* ${phone}\n`;
+            }
             
-            // Adicionar ao DOM
-            document.body.appendChild(notification);
+            whatsappMessage += `*Mensagem:* ${message}\n\n`;
+            whatsappMessage += `_Mensagem enviada através do site_`;
             
-            // Remover após 5 segundos
+            // Codificar mensagem para URL
+            const encodedMessage = encodeURIComponent(whatsappMessage);
+            
+            // Número do WhatsApp (formato internacional sem + e espaços)
+            const whatsappNumber = '5511950501260';
+            
+            // Criar URL do WhatsApp
+            const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
+            
+            // Abrir WhatsApp
+            window.open(whatsappURL, '_blank');
+            
+            // Mostrar notificação de sucesso
+            showNotification('Redirecionando para o WhatsApp...', 'success');
+            
+            // Limpar formulário após um pequeno delay
             setTimeout(() => {
-                notification.classList.add('fade-out');
-                setTimeout(() => {
-                    notification.remove();
-                }, 300);
-            }, 5000);
-            
-            // Fechar ao clicar no botão
-            notification.querySelector('.close-btn').addEventListener('click', () => {
-                notification.remove();
-            });
-            
-            // Limpar formulário
-            contactForm.reset();
+                contactForm.reset();
+            }, 1000);
         });
     }
     
