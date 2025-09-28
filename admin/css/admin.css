@@ -288,17 +288,21 @@
 }
 
 .admin-content {
-    padding: 3rem 0;
+    padding: 2rem 0;
     background-color: #f7fafc;
     min-height: calc(100vh - 120px);
+}
+
+.admin-content .container {
+    padding: 0 1rem;
 }
 
 .admin-card {
     background: white;
     border-radius: 20px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    padding: 2.5rem;
-    margin-bottom: 2rem;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
     border: 1px solid rgba(102, 126, 234, 0.1);
     max-width: 1200px;
     margin-left: auto;
@@ -306,7 +310,8 @@
 }
 
 .admin-card h2 {
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
+    margin-top: 0;
     color: #2d3748;
     font-size: 1.8rem;
     font-weight: 700;
@@ -315,11 +320,11 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
     border-bottom: 3px solid #ff758f;
-    padding-bottom: 1rem;
+    padding-bottom: 0.8rem;
 }
 
 .admin-actions {
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -574,20 +579,25 @@
         padding: 1rem;
     }
     
+    .admin-content {
+        padding: 1.5rem 0;
+    }
+    
     .admin-card {
         padding: 1.5rem;
-        margin: 1rem;
+        margin: 1rem 0.5rem;
         border-radius: 16px;
     }
     
     .admin-card h2 {
-        font-size: 1.5rem;
+        font-size: 1.6rem;
+        margin-bottom: 1.2rem;
     }
     
     .gallery-grid {
         grid-template-columns: 1fr;
         gap: 1.5rem;
-        padding: 0 1rem;
+        padding: 0;
     }
     
     .modal-content {
@@ -626,16 +636,27 @@
 
 @media (max-width: 480px) {
     .admin-content {
-        padding: 1.5rem 0;
+        padding: 1rem 0;
     }
     
-    .gallery-grid {
+    .admin-content .container {
         padding: 0 0.5rem;
     }
     
+    .gallery-grid {
+        padding: 0;
+    }
+    
     .admin-card {
-        margin: 0.5rem;
-        padding: 1rem;
+        margin: 0.5rem 0;
+        padding: 1.5rem 1rem;
+        border-radius: 15px;
+    }
+    
+    .admin-card h2 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.6rem;
     }
     
     .login-container {

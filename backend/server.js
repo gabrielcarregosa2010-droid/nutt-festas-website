@@ -34,6 +34,11 @@ connectDB().then(conn => {
 
 // Middleware para verificar conexão MongoDB
 const checkMongoDB = (req, res, next) => {
+  // Se SKIP_MONGODB está ativo, permitir acesso (modo fallback)
+  if (process.env.SKIP_MONGODB === 'true') {
+    return next();
+  }
+  
   // Em desenvolvimento, bloquear se não há conexão
   if (!dbConnection && process.env.NODE_ENV === 'development') {
     return res.status(503).json({
