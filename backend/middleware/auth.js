@@ -17,8 +17,10 @@ const authenticateToken = async (req, res, next) => {
 
     // Verificar e decodificar o token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log('Token decodificado:', { id: decoded.id, username: decoded.username, role: decoded.role });
     
     // Verificar se MongoDB está conectado
+    console.log('MongoDB readyState:', mongoose.connection.readyState);
     if (mongoose.connection.readyState !== 1) {
       console.warn('MongoDB não conectado - usando dados do token para autenticação');
       
@@ -32,6 +34,7 @@ const authenticateToken = async (req, res, next) => {
         isActive: true
       };
       
+      console.log('Usuário fallback criado:', req.user);
       return next();
     }
     
