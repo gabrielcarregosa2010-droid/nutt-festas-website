@@ -139,6 +139,8 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Configuração removida - usando logo.png padrão agora
+
 // Servir arquivos estáticos do frontend
 app.use(express.static('../'));
 app.use('/admin', express.static('../admin'));
