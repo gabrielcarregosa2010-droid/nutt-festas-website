@@ -13,8 +13,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             limit: 50
         });
         
-        if (response.success && response.data.items.length > 0) {
-            renderGallery(response.data.items, true);
+        if (response.success && response.data.length > 0) {
+            renderGallery(response.data, true);
         } else {
             // Mostrar mensagem quando não há itens na galeria
             galleryContainer.innerHTML = `
