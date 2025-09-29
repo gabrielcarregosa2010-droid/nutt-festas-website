@@ -9,6 +9,12 @@
     },
     "api/test.js": {
       "maxDuration": 10
+    },
+    "api/gallery.js": {
+      "maxDuration": 15
+    },
+    "api/validate.js": {
+      "maxDuration": 10
     }
   },
   "routes": [
@@ -19,6 +25,14 @@
     {
       "src": "/api/test",
       "dest": "/api/test.js"
+    },
+    {
+      "src": "/api/gallery/(.*)",
+      "dest": "/api/gallery.js"
+    },
+    {
+      "src": "/api/gallery",
+      "dest": "/api/gallery.js"
     },
     {
       "src": "/admin/(.*)",
