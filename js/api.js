@@ -110,15 +110,19 @@ class ApiService {
   // Métodos de autenticação
   async login(username, password) {
     try {
-      const response = await this.request('/auth/login', {
+      const response = await this.request('/login', {
         method: 'POST',
         body: JSON.stringify({ username, password })
       });
 
       if (response.success) {
-        this.token = response.data.token;
+        this.token = response.token;
         localStorage.setItem('authToken', this.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+        localStorage.setItem('user', JSON.stringify({
+          id: 'admin-001',
+          username: 'admin',
+          role: 'admin'
+        }));
       }
 
       return response;
@@ -129,18 +133,25 @@ class ApiService {
 
   async logout() {
     try {
-      if (this.token) {
-        await this.request('/auth/logout', { method: 'POST' });
-      }
+      // Para o sistema simples, apenas limpar dados locais
+      this.clearAuth();
+      return { success: true, message: 'Logout realizado com sucesso' };
     } catch (error) {
       console.error('Erro no logout:', error);
-    } finally {
       this.clearAuth();
     }
   }
 
   async getMe() {
-    return await this.request('/auth/me');
+    // Para validação simples, usar o endpoint de validate
+    if (!this.token) {
+      throw new Error('Token não encontrado');
+    }
+    
+    return await this.request('/validate', {
+      method: 'POST',
+      body: JSON.stringify({ token: this.token })
+    });
   }
 
   clearAuth() {
