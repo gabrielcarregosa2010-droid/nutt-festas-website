@@ -55,7 +55,7 @@ async function loadGalleryItems() {
         const response = await api.getGalleryItems({ sortBy: 'createdAt', sortOrder: 'desc' });
         
         if (response.success) {
-            galleryItems = response.data.items;
+            galleryItems = response.data;
             renderGalleryItems();
         } else {
             throw new Error(response.message || 'Erro ao carregar itens');
