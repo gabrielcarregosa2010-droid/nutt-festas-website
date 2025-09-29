@@ -26,14 +26,7 @@
       "src": "/api/test",
       "dest": "/api/test.js"
     },
-    {
-      "src": "/api/gallery/(.*)",
-      "dest": "/api/gallery.js"
-    },
-    {
-      "src": "/api/gallery",
-      "dest": "/api/gallery.js"
-    },
+
     {
       "src": "/admin/(.*)",
       "dest": "/admin/$1",
