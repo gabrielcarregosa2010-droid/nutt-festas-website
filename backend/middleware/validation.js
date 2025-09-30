@@ -19,7 +19,7 @@ const handleValidationErrors = (req, res, next) => {
   next();
 };
 
-// Validações para itens da galeria
+// Validações para itens da galeria (formato antigo - compatibilidade)
 const validateGalleryItem = [
   body('title')
     .trim()
@@ -55,6 +55,50 @@ const validateGalleryItem = [
   handleValidationErrors
 ];
 
+// Validações para criação de itens da galeria (novo formato com múltiplas imagens)
+const validateGalleryItemCreate = [
+  body('title')
+    .trim()
+    .notEmpty()
+    .withMessage('Título é obrigatório')
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Título deve ter entre 1 e 100 caracteres'),
+    
+  body('caption')
+    .trim()
+    .notEmpty()
+    .withMessage('Legenda é obrigatória')
+    .isLength({ min: 1, max: 500 })
+    .withMessage('Legenda deve ter entre 1 e 500 caracteres'),
+    
+  // Validação para o novo formato de múltiplas imagens
+  body('images')
+    .isArray({ min: 1 })
+    .withMessage('Pelo menos uma imagem é obrigatória')
+    .custom((images) => {
+      if (images && Array.isArray(images)) {
+        for (let i = 0; i < images.length; i++) {
+          const image = images[i];
+          if (!image.data) {
+            throw new Error(`Dados da imagem ${i + 1} são obrigatórios`);
+          }
+          if (!image.type) {
+            throw new Error(`Tipo da imagem ${i + 1} é obrigatório`);
+          }
+          if (!image.data.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,/)) {
+            throw new Error(`Formato de arquivo inválido na imagem ${i + 1}`);
+          }
+          if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm'].includes(image.type)) {
+            throw new Error(`Tipo de arquivo não suportado na imagem ${i + 1}`);
+          }
+        }
+      }
+      return true;
+    }),
+    
+  handleValidationErrors
+];
+
 // Validações para atualização de item da galeria
 const validateGalleryItemUpdate = [
   body('title')
@@ -75,13 +119,25 @@ const validateGalleryItemUpdate = [
     .isArray()
     .withMessage('Images deve ser um array')
     .custom((images) => {
-      if (images && Array.isArray(images)) {
+      if (images && Array.isArray(images) && images.length > 0) {
         for (let i = 0; i < images.length; i++) {
           const image = images[i];
-          if (image.data && !image.data.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,/)) {
+          
+          // Verificar se tem dados obrigatórios
+          if (!image.data) {
+            throw new Error(`Dados da imagem ${i + 1} são obrigatórios`);
+          }
+          if (!image.type) {
+            throw new Error(`Tipo da imagem ${i + 1} é obrigatório`);
+          }
+          
+          // Verificar formato base64
+          if (!image.data.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,/)) {
             throw new Error(`Formato de arquivo inválido na imagem ${i + 1}`);
           }
-          if (image.type && !['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm'].includes(image.type)) {
+          
+          // Verificar tipo de arquivo suportado
+          if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm'].includes(image.type)) {
             throw new Error(`Tipo de arquivo não suportado na imagem ${i + 1}`);
           }
         }
@@ -151,6 +207,7 @@ const validateUserCreation = [
 
 module.exports = {
   validateGalleryItem,
+  validateGalleryItemCreate,
   validateGalleryItemUpdate,
   validateLogin,
   validateUserCreation,

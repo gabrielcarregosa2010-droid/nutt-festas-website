@@ -3,7 +3,7 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const GalleryItem = require('../models/GalleryItem');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
-const { validateGalleryItem, validateGalleryItemUpdate } = require('../middleware/validation');
+const { validateGalleryItem, validateGalleryItemCreate, validateGalleryItemUpdate } = require('../middleware/validation');
 
 // @route   GET /api/gallery
 // @desc    Obter todos os itens da galeria
@@ -109,77 +109,35 @@ router.get('/:id', async (req, res) => {
 // @route   POST /api/gallery
 // @desc    Criar novo item da galeria
 // @access  Private (Admin only)
-router.post('/', authenticateToken, requireAdmin, async (req, res) => {
+router.post('/', authenticateToken, requireAdmin, validateGalleryItemCreate, async (req, res) => {
   try {
-    const { title, caption, category, date, isActive, images, fileData, fileType } = req.body;
+    const { title, caption, category, date, isActive, images } = req.body;
 
-    // Validação básica
-    if (!title || !caption) {
-      return res.status(400).json({
-        success: false,
-        message: 'Título e legenda são obrigatórios'
-      });
-    }
-
-    let itemData = {
-      title,
-      caption,
-      category: category || 'geral',
-      date: date || new Date(),
-      isActive: isActive !== false
-    };
-
-    // Suporte para múltiplas imagens (novo formato)
-    if (images && Array.isArray(images) && images.length > 0) {
-      // Validar cada imagem
-      for (let i = 0; i < images.length; i++) {
-        const image = images[i];
-        if (!image.data || !image.type) {
-          return res.status(400).json({
-            success: false,
-            message: `Dados da imagem ${i + 1} são inválidos`
-          });
-        }
-
-        // Verificar tamanho do arquivo base64 (aproximadamente)
-        const base64Size = image.data.length * (3/4);
-        const maxSize = 10 * 1024 * 1024; // 10MB
-
-        if (base64Size > maxSize) {
-          return res.status(400).json({
-            success: false,
-            message: `Imagem ${i + 1} muito grande. Tamanho máximo: 10MB`
-          });
-        }
-      }
-
-      // Converter imagens para o formato do banco
-      itemData.images = images.map((img, index) => ({
-        src: img.data,
-        alt: img.name || `${title} - Imagem ${index + 1}`
-      }));
-    }
-    // Compatibilidade com formato antigo (uma única imagem)
-    else if (fileData && fileType) {
-      // Verificar tamanho do arquivo base64 (aproximadamente)
-      const base64Size = fileData.length * (3/4);
+    // Verificar tamanho dos arquivos
+    for (let i = 0; i < images.length; i++) {
+      const image = images[i];
+      const base64Size = image.data.length * (3/4);
       const maxSize = 10 * 1024 * 1024; // 10MB
 
       if (base64Size > maxSize) {
         return res.status(400).json({
           success: false,
-          message: 'Arquivo muito grande. Tamanho máximo: 10MB'
+          message: `Imagem ${i + 1} muito grande. Tamanho máximo: 10MB`
         });
       }
-
-      itemData.fileData = fileData;
-      itemData.fileType = fileType;
-    } else {
-      return res.status(400).json({
-        success: false,
-        message: 'Pelo menos uma imagem é obrigatória'
-      });
     }
+
+    const itemData = {
+      title,
+      caption,
+      category: category || 'geral',
+      date: date || new Date(),
+      isActive: isActive !== false,
+      images: images.map((img, index) => ({
+        src: img.data,
+        alt: img.name || `${title} - Imagem ${index + 1}`
+      }))
+    };
 
     const newItem = new GalleryItem(itemData);
     const savedItem = await newItem.save();
