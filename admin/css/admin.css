@@ -459,6 +459,75 @@
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
+/* Multiple Images Preview */
+.file-preview-multiple {
+    margin-top: 1.5rem;
+    display: none;
+}
+
+.multiple-images-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.image-preview-item {
+    position: relative;
+    background: #f8f9fa;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+}
+
+.image-preview-item:hover {
+    transform: translateY(-2px);
+}
+
+.image-preview-item img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    display: block;
+}
+
+.image-preview-item .remove-image {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(255, 0, 0, 0.8);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
+}
+
+.image-preview-item .remove-image:hover {
+    background: rgba(255, 0, 0, 1);
+}
+
+.image-preview-item .image-info {
+    padding: 8px;
+    font-size: 0.8rem;
+    color: #666;
+    text-align: center;
+}
+
+.file-help {
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 0.5rem;
+    font-style: italic;
+}
+
 /* Modal */
 .modal {
     display: none;
@@ -766,4 +835,62 @@
         top: 8px;
         right: 12px;
     }
+}
+
+/* Checkbox Styles */
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: #4a5568;
+    margin: 0;
+}
+
+.checkbox-label input[type="checkbox"] {
+    margin-right: 0.75rem;
+    width: 18px;
+    height: 18px;
+    accent-color: #ff758f;
+    cursor: pointer;
+}
+
+.checkbox-label:hover {
+    color: #2d3748;
+}
+
+/* Item Metadata Styles */
+.item-metadata {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0.75rem 0;
+    font-size: 0.8rem;
+}
+
+.metadata-item {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: #666;
+    background: #f7fafc;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.metadata-item i {
+    font-size: 0.7rem;
+}
+
+.metadata-item.status.active {
+    background: #f0fff4;
+    color: #22543d;
+    border-color: #9ae6b4;
+}
+
+.metadata-item.status.inactive {
+    background: #fffaf0;
+    color: #c53030;
+    border-color: #feb2b2;
 }

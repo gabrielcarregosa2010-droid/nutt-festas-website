@@ -18,5 +18,8 @@ const environment = window.location.hostname === 'localhost' || window.location.
 // Exportar configuração atual
 const API_BASE_URL = API_CONFIG[environment].baseURL;
 
-console.log(`🌍 Ambiente: ${environment}`);
-console.log(`🔗 API URL: ${API_BASE_URL}`);
+// Debug logs apenas em desenvolvimento
+if (environment === 'development') {
+    window.DebugConfig.log(`🌍 Ambiente: ${environment}`);
+    window.DebugConfig.log(`🔗 API URL: ${API_BASE_URL}`);
+}

@@ -1,3 +1,5 @@
+// Usar configuração global de debug
+
 // Verificar se o usuário está logado
 async function checkAuth() {
     // Não verificar na página de login
@@ -18,7 +20,7 @@ async function checkAuth() {
         // Token válido, usuário pode continuar
     } catch (error) {
         // Token inválido ou expirado
-        console.log('Token inválido, redirecionando para login');
+        window.DebugConfig.log('Token inválido, redirecionando para login');
         api.clearAuth();
         window.location.href = 'login.html';
     }
@@ -58,7 +60,7 @@ async function handleLogin(e) {
             showLoginMessage(response.message || 'Erro no login', 'error');
         }
     } catch (error) {
-        console.error('Erro no login:', error);
+        debugError('Erro no login:', error);
         showLoginMessage(error.message || 'Erro ao conectar com o servidor', 'error');
     } finally {
         // Reabilitar botão
@@ -87,7 +89,7 @@ async function handleLogout() {
     try {
         await api.logout();
     } catch (error) {
-        console.error('Erro no logout:', error);
+        debugError('Erro no logout:', error);
     } finally {
         window.location.href = 'login.html';
     }

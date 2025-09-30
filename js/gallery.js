@@ -1,4 +1,7 @@
 // Galeria de imagens com modal e navegação
+
+// Usar configuração global de debug diretamente
+
 document.addEventListener('DOMContentLoaded', async function() {
     const galleryContainer = document.getElementById('gallery');
     
@@ -25,7 +28,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             `;
         }
     } catch (error) {
-        console.error('Erro ao carregar galeria:', error);
+        window.DebugConfig.error('Erro ao carregar galeria:', error);
         galleryContainer.innerHTML = `
             <div class="error-message">
                 <h3>Erro ao carregar galeria</h3>
@@ -129,9 +132,6 @@ document.addEventListener('DOMContentLoaded', async function() {
                         <button class="modal-action-btn fullscreen-btn" id="fullscreenBtn" title="Tela cheia">
                             <i class="fas fa-expand"></i>
                         </button>
-                        <button class="modal-action-btn download-btn" id="downloadBtn" title="Download">
-                            <i class="fas fa-download"></i>
-                        </button>
                         <button class="modal-action-btn close-btn" id="closeBtn" title="Fechar">
                             <i class="fas fa-times"></i>
                         </button>
@@ -195,7 +195,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         modal.querySelector('#closeBtn').addEventListener('click', closeModal);
         modal.querySelector('.modal-backdrop').addEventListener('click', closeModal);
         modal.querySelector('#fullscreenBtn').addEventListener('click', toggleFullscreen);
-        modal.querySelector('#downloadBtn').addEventListener('click', downloadImage);
         
         document.addEventListener('keydown', handleKeyPress);
         
@@ -285,8 +284,18 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
         
         // Atualizar metadados
-        modalDate.textContent = item.date || new Date().toLocaleDateString('pt-BR');
-        modalCategory.textContent = item.category || 'Galeria de Eventos';
+        const displayDate = item.date ? new Date(item.date).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR');
+        modalDate.textContent = displayDate;
+        
+        // Mapear categorias para nomes amigáveis
+        const categoryNames = {
+            'casamentos': 'Casamentos',
+            'aniversarios': 'Aniversários',
+            'corporativos': 'Eventos Corporativos',
+            'formaturas': 'Formaturas',
+            'geral': 'Galeria de Eventos'
+        };
+        modalCategory.textContent = categoryNames[item.category] || 'Galeria de Eventos';
         
         // Configurar navegação entre imagens do mesmo item
         prevBtn.onclick = () => {
@@ -369,19 +378,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     }
     
-    function downloadImage() {
-        const modalImage = document.getElementById('modalImage');
-        const modalTitle = document.getElementById('modalTitle');
-        
-        if (modalImage.src) {
-            const link = document.createElement('a');
-            link.href = modalImage.src;
-            link.download = `${modalTitle.textContent || 'imagem'}.jpg`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-    }
+
     
     function closeModal() {
         const modal = document.getElementById('galleryModal');
@@ -446,8 +443,6 @@ document.addEventListener('DOMContentLoaded', async function() {
             }
         } else if (e.key === 'f' || e.key === 'F') {
             toggleFullscreen();
-        } else if (e.key === 'd' || e.key === 'D') {
-            downloadImage();
         }
     }
 });

@@ -1,7 +1,10 @@
+// Usar configuração global de debug diretamente
+
 // Variáveis globais para gerenciamento da galeria
 let galleryItems = [];
 let currentItemId = null;
-let fileData = null;
+let selectedFiles = []; // Array to store multiple files
+let maxFiles = 3; // Maximum number of files allowed
 let isLoading = false;
 
 // Elementos DOM
@@ -61,7 +64,7 @@ async function loadGalleryItems() {
             throw new Error(response.message || 'Erro ao carregar itens');
         }
     } catch (error) {
-        console.error('Erro ao carregar galeria:', error);
+        window.DebugConfig.error('Erro ao carregar galeria:', error);
         galleryContainer.innerHTML = `
             <div class="error-message">
                 <p>Erro ao carregar itens da galeria: ${error.message}</p>
@@ -109,11 +112,22 @@ function renderGalleryItems() {
             `;
         }
         
+        // Formatar data para exibição
+        const displayDate = item.date ? new Date(item.date).toLocaleDateString('pt-BR') : 'Data não definida';
+        const categoryDisplay = item.category ? item.category.charAt(0).toUpperCase() + item.category.slice(1) : 'Geral';
+        const statusClass = item.isActive !== false ? 'active' : 'inactive';
+        const statusText = item.isActive !== false ? 'Ativo' : 'Inativo';
+        
         itemElement.innerHTML = `
             ${mediaElement}
             <div class="content">
                 <h3>${item.title}</h3>
                 <p>${item.caption}</p>
+                <div class="item-metadata">
+                    <span class="metadata-item"><i class="fas fa-tag"></i> ${categoryDisplay}</span>
+                    <span class="metadata-item"><i class="fas fa-calendar"></i> ${displayDate}</span>
+                    <span class="metadata-item status ${statusClass}"><i class="fas fa-circle"></i> ${statusText}</span>
+                </div>
                 <div class="item-actions">
                     <button class="edit-btn" data-id="${item.id}"><i class="fas fa-edit"></i></button>
                     <button class="delete-btn" data-id="${item.id}"><i class="fas fa-trash"></i></button>
@@ -141,57 +155,71 @@ function openAddItemModal() {
     filePreview.innerHTML = '';
     filePreview.style.display = 'none';
     fileError.style.display = 'none';
+    
+    // Definir valores padrão para novos itens
+    document.getElementById('category').value = 'geral';
+    document.getElementById('isActive').checked = true;
+    document.getElementById('eventDate').value = new Date().toISOString().split('T')[0];
+    
     currentItemId = null;
-    fileData = null;
+    selectedFiles = [];
     itemModal.style.display = 'block';
 }
 
 // Abrir modal para editar item
 function openEditItemModal(id) {
     const item = galleryItems.find(item => item.id === id);
-    if (!item) return;
+    if (!item) {
+        showNotification('Item não encontrado', 'error');
+        return;
+    }
     
     modalTitle.textContent = 'Editar Item';
     document.getElementById('itemId').value = item.id;
     document.getElementById('title').value = item.title;
     document.getElementById('caption').value = item.caption;
+    document.getElementById('category').value = item.category || 'geral';
+    document.getElementById('isActive').checked = item.isActive !== false;
     
-    // Mostrar preview do arquivo
-    filePreview.innerHTML = '';
-    filePreview.style.display = 'block';
+    // Formatar data para o input date
+    if (item.date) {
+        const date = new Date(item.date);
+        const formattedDate = date.toISOString().split('T')[0];
+        document.getElementById('eventDate').value = formattedDate;
+    } else {
+        document.getElementById('eventDate').value = new Date().toISOString().split('T')[0];
+    }
     
-    // Verificar se tem fileData (item único) ou images (múltiplas imagens)
-    if (item.fileData && item.fileType) {
-        // Item com arquivo único
-        if (item.fileType.startsWith('image/')) {
-            filePreview.innerHTML = `<img src="${item.fileData}" alt="${item.title}">`;
-        } else if (item.fileType.startsWith('video/')) {
-            filePreview.innerHTML = `<video controls><source src="${item.fileData}" type="${item.fileType}"></video>`;
-        }
+    // Limpar arquivos selecionados
+    selectedFiles = [];
+    
+    // Carregar imagens existentes se houver
+    if (item.images && item.images.length > 0) {
+        // Converter imagens existentes para o formato de selectedFiles
+        selectedFiles = item.images.map((img, index) => ({
+            data: img.src || img.data,
+            type: 'image/jpeg', // Assumir JPEG se não especificado
+            name: img.alt || `Imagem ${index + 1}`,
+            size: 0, // Tamanho não disponível para imagens existentes
+            id: `existing_${index}_${Date.now()}`,
+            isExisting: true
+        }));
         
-        fileData = {
+        updateFilePreview();
+    } else if (item.fileData && item.fileType) {
+        // Compatibilidade com formato antigo (uma única imagem)
+        selectedFiles = [{
             data: item.fileData,
-            type: item.fileType
-        };
-    } else if (item.images && item.images.length > 0) {
-        // Item com múltiplas imagens - mostrar todas as imagens
-        const imagesHtml = item.images.map((img, index) => 
-            `<div class="image-preview-item">
-                <img src="${img.src}" alt="${img.alt}">
-                <p>Imagem ${index + 1}: ${img.alt}</p>
-            </div>`
-        ).join('');
+            type: item.fileType,
+            name: 'Imagem existente',
+            size: 0,
+            id: `existing_single_${Date.now()}`,
+            isExisting: true
+        }];
         
-        filePreview.innerHTML = `
-            <div class="multiple-images-preview">
-                <p><strong>${item.images.length} imagens neste item:</strong></p>
-                <div class="images-grid">${imagesHtml}</div>
-                <p><em>Nota: Para editar as imagens, você precisará excluir e recriar o item.</em></p>
-            </div>
-        `;
-        
-        // Para itens com múltiplas imagens, não definimos fileData
-        fileData = null;
+        updateFilePreview();
+    } else {
+        filePreview.style.display = 'none';
     }
     
     currentItemId = item.id;
@@ -201,6 +229,9 @@ function openEditItemModal(id) {
 // Fechar modal de item
 function closeItemModal() {
     itemModal.style.display = 'none';
+    selectedFiles = [];
+    filePreview.style.display = 'none';
+    fileError.style.display = 'none';
 }
 
 // Abrir modal de confirmação de exclusão
@@ -220,18 +251,20 @@ async function saveItem(e) {
     
     const title = document.getElementById('title').value.trim();
     const caption = document.getElementById('caption').value.trim();
+    const category = document.getElementById('category').value;
+    const eventDate = document.getElementById('eventDate').value;
+    const isActive = document.getElementById('isActive').checked;
     const submitButton = e.target.querySelector('button[type="submit"]');
     
     // Validar campos obrigatórios
-    if (!title || !caption) {
+    if (!title || !caption || !category || !eventDate) {
         showNotification('Por favor, preencha todos os campos obrigatórios.', 'error');
         return;
     }
     
-    // Validar se há um arquivo para novos itens
-    if (!fileData && !currentItemId) {
-        fileError.textContent = 'Por favor, selecione um arquivo de imagem ou vídeo.';
-        fileError.style.display = 'block';
+    // Validar se há imagens selecionadas para novos itens
+    if (!currentItemId && selectedFiles.length === 0) {
+        showNotification('Por favor, selecione pelo menos uma imagem para o item.', 'error');
         return;
     }
     
@@ -244,12 +277,22 @@ async function saveItem(e) {
         
         if (currentItemId) {
             // Editar item existente
-            const updateData = { title, caption };
+            const updateData = { 
+                title, 
+                caption, 
+                category, 
+                date: eventDate, 
+                isActive 
+            };
             
-            // Se um novo arquivo foi selecionado, incluir nos dados
-            if (fileData && fileData.data) {
-                updateData.fileData = fileData.data;
-                updateData.fileType = fileData.type;
+            // Se novas imagens foram selecionadas, incluir nos dados
+            if (selectedFiles.length > 0) {
+                updateData.images = selectedFiles.map(file => ({
+                    data: file.data,
+                    type: file.type,
+                    name: file.name,
+                    size: file.size
+                }));
             }
             
             response = await api.updateGalleryItem(currentItemId, updateData);
@@ -258,8 +301,15 @@ async function saveItem(e) {
             const newItemData = {
                 title,
                 caption,
-                fileData: fileData.data,
-                fileType: fileData.type
+                category,
+                date: eventDate,
+                isActive,
+                images: selectedFiles.map(file => ({
+                    data: file.data,
+                    type: file.type,
+                    name: file.name,
+                    size: file.size
+                }))
             };
             
             response = await api.createGalleryItem(newItemData);
@@ -282,7 +332,7 @@ async function saveItem(e) {
         }
         
     } catch (error) {
-        console.error('Erro ao salvar item:', error);
+        debugError('Erro ao salvar item:', error);
         showNotification('Erro ao salvar: ' + error.message, 'error');
     } finally {
         // Reabilitar botão
@@ -317,7 +367,7 @@ async function deleteItem() {
             throw new Error(response.message || 'Erro ao excluir item');
         }
     } catch (error) {
-        console.error('Erro ao excluir item:', error);
+        debugError('Erro ao excluir item:', error);
         showNotification('Erro ao excluir: ' + error.message, 'error');
     } finally {
         // Reabilitar botão
@@ -336,6 +386,7 @@ function setupFileUpload() {
     // Eventos de drag and drop
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
         dropArea.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
     });
     
     function preventDefaults(e) {
@@ -377,57 +428,101 @@ function setupFileUpload() {
     function handleFiles(files) {
         if (files.length === 0) return;
         
-        const file = files[0];
-        
-        // Validar tipo de arquivo
-        if (!file.type.match('image.*') && !file.type.match('video.*')) {
-            fileError.textContent = 'Por favor, selecione um arquivo de imagem ou vídeo.';
+        // Verificar se adicionar estes arquivos excederia o limite
+        if (selectedFiles.length + files.length > maxFiles) {
+            fileError.textContent = `Você pode selecionar no máximo ${maxFiles} imagens. Atualmente você tem ${selectedFiles.length} selecionada(s).`;
             fileError.style.display = 'block';
             return;
         }
         
-        // Validar tamanho do arquivo (máximo 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-            fileError.textContent = 'O arquivo é muito grande. O tamanho máximo é 5MB.';
-            fileError.style.display = 'block';
-            return;
-        }
-        
-        // Limpar mensagens de erro
-        fileError.style.display = 'none';
-        
-        // Ler o arquivo
-        const reader = new FileReader();
-        
-        reader.onload = function(e) {
-            // Armazenar dados do arquivo
-            fileData = {
-                data: e.target.result,
-                type: file.type
-            };
-            
-            // Mostrar preview
-            filePreview.innerHTML = '';
-            
-            if (file.type.startsWith('image/')) {
-                const img = document.createElement('img');
-                img.src = e.target.result;
-                filePreview.appendChild(img);
-            } else if (file.type.startsWith('video/')) {
-                const video = document.createElement('video');
-                video.controls = true;
-                const source = document.createElement('source');
-                source.src = e.target.result;
-                source.type = file.type;
-                video.appendChild(source);
-                filePreview.appendChild(video);
+        // Processar cada arquivo
+        Array.from(files).forEach(file => {
+            // Validar tipo de arquivo (apenas imagens agora)
+            if (!file.type.startsWith('image/')) {
+                fileError.textContent = 'Por favor, selecione apenas arquivos de imagem (JPG, PNG, GIF, WebP).';
+                fileError.style.display = 'block';
+                return;
             }
             
-            filePreview.style.display = 'block';
-        };
-        
-        reader.readAsDataURL(file);
+            // Validar tamanho do arquivo (máximo 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                fileError.textContent = 'Cada imagem deve ter no máximo 5MB.';
+                fileError.style.display = 'block';
+                return;
+            }
+            
+            // Ler o arquivo
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const fileObj = {
+                    data: e.target.result,
+                    type: file.type,
+                    name: file.name,
+                    size: file.size,
+                    id: Date.now() + Math.random() // ID único para cada arquivo
+                };
+                
+                selectedFiles.push(fileObj);
+                updateFilePreview();
+                fileError.style.display = 'none';
+            };
+            
+            reader.readAsDataURL(file);
+        });
     }
+}
+
+// Função para remover um arquivo da seleção
+function removeFile(fileId) {
+    selectedFiles = selectedFiles.filter(file => file.id !== fileId);
+    updateFilePreview();
+}
+
+// Função auxiliar para formatar tamanho do arquivo
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Atualizar a função de preview de arquivos
+function updateFilePreview() {
+    if (selectedFiles.length === 0) {
+        filePreview.style.display = 'none';
+        return;
+    }
+    
+    filePreview.style.display = 'block';
+    
+    let previewHTML = '<div class="multiple-images-grid">';
+    
+    selectedFiles.forEach((file, index) => {
+        previewHTML += `
+            <div class="image-preview-item" data-file-id="${file.id}">
+                <img src="${file.data}" alt="Preview ${index + 1}">
+                <button type="button" class="remove-image" onclick="removeFile('${file.id}')" title="Remover imagem">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="image-info">
+                    ${file.name}<br>
+                    <small>${formatFileSize(file.size)}</small>
+                </div>
+            </div>
+        `;
+    });
+    
+    previewHTML += '</div>';
+    
+    if (selectedFiles.length < maxFiles) {
+        previewHTML += `<p style="text-align: center; color: #666; margin-top: 1rem; font-size: 0.9rem;">
+            Você pode adicionar mais ${maxFiles - selectedFiles.length} imagem(ns)
+        </p>`;
+    }
+    
+    filePreview.innerHTML = previewHTML;
 }
 
 // Mostrar notificação

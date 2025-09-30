@@ -13,6 +13,21 @@ const galleryItemSchema = new mongoose.Schema({
     trim: true,
     maxlength: [500, 'Legenda não pode ter mais de 500 caracteres']
   },
+  category: {
+    type: String,
+    required: false,
+    trim: true,
+    enum: {
+      values: ['casamentos', 'aniversarios', 'corporativos', 'formaturas', 'geral'],
+      message: 'Categoria deve ser: casamentos, aniversários, corporativos, formaturas ou geral'
+    },
+    default: 'geral'
+  },
+  date: {
+    type: Date,
+    required: false,
+    default: Date.now
+  },
   fileData: {
     type: String,
     required: function() {
@@ -27,7 +42,7 @@ const galleryItemSchema = new mongoose.Schema({
       return !!this.fileData;
     },
     enum: {
-      values: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm'],
+      values: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'video/mp4', 'video/webm'],
       message: 'Tipo de arquivo não suportado'
     }
   },

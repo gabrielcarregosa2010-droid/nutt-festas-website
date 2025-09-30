@@ -109,28 +109,79 @@ router.get('/:id', async (req, res) => {
 // @route   POST /api/gallery
 // @desc    Criar novo item da galeria
 // @access  Private (Admin only)
-router.post('/', authenticateToken, requireAdmin, validateGalleryItem, async (req, res) => {
+router.post('/', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const { title, caption, fileData, fileType } = req.body;
+    const { title, caption, category, date, isActive, images, fileData, fileType } = req.body;
 
-    // Verificar tamanho do arquivo base64 (aproximadamente)
-    const base64Size = fileData.length * (3/4);
-    const maxSize = 10 * 1024 * 1024; // 10MB
-
-    if (base64Size > maxSize) {
+    // Validação básica
+    if (!title || !caption) {
       return res.status(400).json({
         success: false,
-        message: 'Arquivo muito grande. Tamanho máximo: 10MB'
+        message: 'Título e legenda são obrigatórios'
       });
     }
 
-    const newItem = new GalleryItem({
+    let itemData = {
       title,
       caption,
-      fileData,
-      fileType
-    });
+      category: category || 'geral',
+      date: date || new Date(),
+      isActive: isActive !== false
+    };
 
+    // Suporte para múltiplas imagens (novo formato)
+    if (images && Array.isArray(images) && images.length > 0) {
+      // Validar cada imagem
+      for (let i = 0; i < images.length; i++) {
+        const image = images[i];
+        if (!image.data || !image.type) {
+          return res.status(400).json({
+            success: false,
+            message: `Dados da imagem ${i + 1} são inválidos`
+          });
+        }
+
+        // Verificar tamanho do arquivo base64 (aproximadamente)
+        const base64Size = image.data.length * (3/4);
+        const maxSize = 10 * 1024 * 1024; // 10MB
+
+        if (base64Size > maxSize) {
+          return res.status(400).json({
+            success: false,
+            message: `Imagem ${i + 1} muito grande. Tamanho máximo: 10MB`
+          });
+        }
+      }
+
+      // Converter imagens para o formato do banco
+      itemData.images = images.map((img, index) => ({
+        src: img.data,
+        alt: img.name || `${title} - Imagem ${index + 1}`
+      }));
+    }
+    // Compatibilidade com formato antigo (uma única imagem)
+    else if (fileData && fileType) {
+      // Verificar tamanho do arquivo base64 (aproximadamente)
+      const base64Size = fileData.length * (3/4);
+      const maxSize = 10 * 1024 * 1024; // 10MB
+
+      if (base64Size > maxSize) {
+        return res.status(400).json({
+          success: false,
+          message: 'Arquivo muito grande. Tamanho máximo: 10MB'
+        });
+      }
+
+      itemData.fileData = fileData;
+      itemData.fileType = fileType;
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: 'Pelo menos uma imagem é obrigatória'
+      });
+    }
+
+    const newItem = new GalleryItem(itemData);
     const savedItem = await newItem.save();
 
     res.status(201).json({
@@ -165,31 +216,74 @@ router.post('/', authenticateToken, requireAdmin, validateGalleryItem, async (re
 // @route   PUT /api/gallery/:id
 // @desc    Atualizar item da galeria
 // @access  Private (Admin only)
-router.put('/:id', authenticateToken, requireAdmin, validateGalleryItemUpdate, async (req, res) => {
+router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const { title, caption, fileData, fileType } = req.body;
+    const { title, caption, category, date, isActive, images, fileData, fileType } = req.body;
     
     const updateData = {};
     if (title !== undefined) updateData.title = title;
     if (caption !== undefined) updateData.caption = caption;
-    if (fileData !== undefined) {
-      // Verificar tamanho do arquivo se fornecido
-      const base64Size = fileData.length * (3/4);
-      const maxSize = 10 * 1024 * 1024; // 10MB
+    if (category !== undefined) updateData.category = category;
+    if (date !== undefined) updateData.date = date;
+    if (isActive !== undefined) updateData.isActive = isActive;
 
-      if (base64Size > maxSize) {
-        return res.status(400).json({
-          success: false,
-          message: 'Arquivo muito grande. Tamanho máximo: 10MB'
-        });
+    // Suporte para múltiplas imagens (novo formato)
+    if (images && Array.isArray(images) && images.length > 0) {
+      // Validar cada imagem
+      for (let i = 0; i < images.length; i++) {
+        const image = images[i];
+        if (!image.data || !image.name) {
+          return res.status(400).json({
+            success: false,
+            message: `Dados da imagem ${i + 1} são inválidos`
+          });
+        }
+
+        // Verificar tamanho do arquivo base64 (aproximadamente) apenas para novas imagens
+        if (!image.isExisting) {
+          const base64Size = image.data.length * (3/4);
+          const maxSize = 10 * 1024 * 1024; // 10MB
+
+          if (base64Size > maxSize) {
+            return res.status(400).json({
+              success: false,
+              message: `Imagem ${i + 1} muito grande. Tamanho máximo: 10MB`
+            });
+          }
+        }
+      }
+
+      // Converter imagens para o formato do banco
+      updateData.images = images.map((img, index) => ({
+        src: img.data,
+        alt: img.name || `${title} - Imagem ${index + 1}`
+      }));
+
+      // Limpar campos antigos se estamos usando o novo formato
+      updateData.fileData = undefined;
+      updateData.fileType = undefined;
+    }
+    // Compatibilidade com formato antigo (uma única imagem)
+    else if (fileData !== undefined) {
+      if (fileData) {
+        // Verificar tamanho do arquivo se fornecido
+        const base64Size = fileData.length * (3/4);
+        const maxSize = 10 * 1024 * 1024; // 10MB
+
+        if (base64Size > maxSize) {
+          return res.status(400).json({
+            success: false,
+            message: 'Arquivo muito grande. Tamanho máximo: 10MB'
+          });
+        }
       }
       
       updateData.fileData = fileData;
+      if (fileType !== undefined) updateData.fileType = fileType;
     }
-    if (fileType !== undefined) updateData.fileType = fileType;
 
     const updatedItem = await GalleryItem.findOneAndUpdate(
-      { _id: req.params.id, isActive: true },
+      { _id: req.params.id },
       updateData,
       { new: true, runValidators: true }
     );

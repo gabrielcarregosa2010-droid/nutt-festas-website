@@ -10,10 +10,16 @@
     "api/test.js": {
       "maxDuration": 10
     },
-    "api/gallery.js": {
+    "api/gallery/index.js": {
+      "maxDuration": 15
+    },
+    "api/gallery/[id].js": {
       "maxDuration": 15
     },
     "api/validate.js": {
+      "maxDuration": 10
+    },
+    "api/health.js": {
       "maxDuration": 10
     }
   },

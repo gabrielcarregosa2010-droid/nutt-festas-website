@@ -4,6 +4,8 @@ const API_SETTINGS = {
     timeout: 30000 // 30 segundos para uploads grandes
 };
 
+// Usar configuração global de debug diretamente
+
 // Classe para gerenciar a API
 class ApiService {
   constructor() {
@@ -16,7 +18,7 @@ class ApiService {
     const url = `${this.baseURL}${endpoint}`;
     
     // Log detalhado da requisição
-    console.log('🔄 API Request:', {
+    window.DebugConfig.log('🔄 API Request:', {
       url,
       method: options.method || 'GET',
       endpoint,
@@ -42,7 +44,7 @@ class ApiService {
       const response = await fetch(url, config);
       
       // Log da resposta
-      console.log('📥 API Response:', {
+      window.DebugConfig.log('📥 API Response:', {
         url,
         status: response.status,
         statusText: response.statusText,
@@ -55,7 +57,7 @@ class ApiService {
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
         const text = await response.text();
-        console.error('❌ API Response is not JSON:', {
+        debugError('❌ API Response is not JSON:', {
           url,
           status: response.status,
           contentType,
@@ -68,7 +70,7 @@ class ApiService {
       const data = await response.json();
 
       if (!response.ok) {
-        console.error('❌ API Error Response:', {
+        debugError('❌ API Error Response:', {
           url,
           status: response.status,
           data,
@@ -77,7 +79,7 @@ class ApiService {
         throw new Error(data.message || `Erro HTTP: ${response.status}`);
       }
 
-      console.log('✅ API Success:', {
+      window.DebugConfig.log('✅ API Success:', {
         url,
         success: data.success,
         timestamp: new Date().toISOString()
@@ -85,7 +87,7 @@ class ApiService {
 
       return data;
     } catch (error) {
-      console.error('💥 API Request Failed:', {
+      debugError('💥 API Request Failed:', {
         url,
         error: error.message,
         stack: error.stack,
@@ -96,7 +98,7 @@ class ApiService {
       if (error.message.includes('Token expirado') || 
           error.message.includes('Token inválido') || 
           error.message.includes('faça login novamente')) {
-        console.log('🔄 Token expirado/inválido - fazendo logout automático');
+        window.DebugConfig.log('🔄 Token expirado/inválido - fazendo logout automático');
         this.clearAuth();
         if (window.location.pathname.includes('admin') && !window.location.pathname.includes('login')) {
           window.location.href = '/admin/login.html';
@@ -149,8 +151,7 @@ class ApiService {
     }
     
     return await this.request('/validate', {
-      method: 'POST',
-      body: JSON.stringify({ token: this.token })
+      method: 'GET'
     });
   }
 
@@ -207,7 +208,7 @@ class ApiService {
     try {
       return await this.request('/health');
     } catch (error) {
-      console.error('API não está respondendo:', error);
+      debugError('API não está respondendo:', error);
       return { success: false, message: 'API indisponível' };
     }
   }
@@ -227,14 +228,14 @@ async function checkApiConnection() {
   try {
     const health = await api.healthCheck();
     if (!health || !health.success) {
-      console.warn('⚠️ API Health Check falhou:', health);
+      window.DebugConfig.warn('⚠️ API Health Check falhou:', health);
       showNotification('Servidor indisponível. Algumas funcionalidades podem não funcionar.', 'error');
       return false;
     }
-    console.log('✅ API conectada com sucesso');
+    window.DebugConfig.log('✅ API conectada com sucesso');
     return true;
   } catch (error) {
-    console.error('❌ Erro na verificação de conectividade:', error);
+    window.DebugConfig.error('❌ Erro na verificação de conectividade:', error);
     // Só mostrar notificação se for um erro real de rede
     if (error.message.includes('fetch') || error.message.includes('network') || error.message.includes('Failed to fetch')) {
       showNotification('Não foi possível conectar ao servidor. Verifique sua conexão.', 'error');

@@ -3,6 +3,8 @@
  * Garante que as imagens carreguem corretamente em qualquer ambiente
  */
 
+// Usar configuração global de debug diretamente
+
 class ImageLoader {
     constructor() {
         this.imageCache = new Map();
@@ -42,7 +44,7 @@ class ImageLoader {
     async loadImageFromAPI(imageConfig) {
         const element = document.querySelector(imageConfig.selector);
         if (!element) {
-            console.warn(`Elemento não encontrado: ${imageConfig.selector}`);
+            window.DebugConfig.warn(`Elemento não encontrado: ${imageConfig.selector}`);
             return;
         }
 
@@ -60,7 +62,7 @@ class ImageLoader {
             }
 
             // Se a API falhar, usar fallback local
-            console.log(`API falhou para ${imageConfig.name}, usando fallback local`);
+            window.DebugConfig.log(`API falhou para ${imageConfig.name}, usando fallback local`);
             const fallbackSuccess = await this.tryLoadImage(imageConfig.fallback, element, imageConfig);
             
             if (fallbackSuccess) {
@@ -81,7 +83,7 @@ class ImageLoader {
             this.onImageError(element, imageConfig);
 
         } catch (error) {
-            console.error(`Erro ao carregar imagem ${imageConfig.name}:`, error);
+            window.DebugConfig.error(`Erro ao carregar imagem ${imageConfig.name}:`, error);
             this.onImageError(element, imageConfig);
         }
     }
