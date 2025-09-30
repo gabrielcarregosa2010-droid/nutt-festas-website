@@ -27,4 +27,17 @@ if (typeof window.DebugConfig === 'undefined') {
             }
         }
     };
+    
+    // Funções globais para compatibilidade
+    window.debugError = function(...args) {
+        window.DebugConfig.error(...args);
+    };
+    
+    window.debugLog = function(...args) {
+        window.DebugConfig.log(...args);
+    };
+    
+    window.debugWarn = function(...args) {
+        window.DebugConfig.warn(...args);
+    };
 }

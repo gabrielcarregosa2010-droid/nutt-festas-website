@@ -216,7 +216,7 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
 // @route   PUT /api/gallery/:id
 // @desc    Atualizar item da galeria
 // @access  Private (Admin only)
-router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
+router.put('/:id', authenticateToken, requireAdmin, validateGalleryItemUpdate, async (req, res) => {
   try {
     const { title, caption, category, date, isActive, images, fileData, fileType } = req.body;
     

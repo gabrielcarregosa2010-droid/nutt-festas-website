@@ -69,6 +69,27 @@ const validateGalleryItemUpdate = [
     .isLength({ min: 1, max: 500 })
     .withMessage('Legenda deve ter entre 1 e 500 caracteres'),
     
+  // Validação para o novo formato de múltiplas imagens
+  body('images')
+    .optional()
+    .isArray()
+    .withMessage('Images deve ser um array'),
+    
+  body('images.*.data')
+    .optional()
+    .custom((value) => {
+      if (value && !value.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,/)) {
+        throw new Error('Formato de arquivo inválido');
+      }
+      return true;
+    }),
+    
+  body('images.*.type')
+    .optional()
+    .isIn(['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm'])
+    .withMessage('Tipo de arquivo não suportado'),
+    
+  // Validação para o formato antigo (compatibilidade)
   body('fileData')
     .optional()
     .custom((value) => {
