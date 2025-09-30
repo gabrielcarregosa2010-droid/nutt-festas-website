@@ -439,7 +439,7 @@ function setupFileUpload() {
         Array.from(files).forEach(file => {
             // Validar tipo de arquivo (apenas imagens agora)
             if (!file.type.startsWith('image/')) {
-                fileError.textContent = 'Por favor, selecione apenas arquivos de imagem (JPG, PNG, GIF, WebP).';
+                fileError.textContent = 'Por favor, selecione apenas arquivos de imagem (JPG, JPEG, PNG, GIF, WebP).';
                 fileError.style.display = 'block';
                 return;
             }
