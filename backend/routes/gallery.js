@@ -232,7 +232,7 @@ router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
       // Validar cada imagem
       for (let i = 0; i < images.length; i++) {
         const image = images[i];
-        if (!image.data || !image.name) {
+        if (!image.data || (!image.name && !image.type)) {
           return res.status(400).json({
             success: false,
             message: `Dados da imagem ${i + 1} são inválidos`
@@ -256,7 +256,7 @@ router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
       // Converter imagens para o formato do banco
       updateData.images = images.map((img, index) => ({
         src: img.data,
-        alt: img.name || `${title} - Imagem ${index + 1}`
+        alt: img.name || img.type || `${title} - Imagem ${index + 1}`
       }));
 
       // Limpar campos antigos se estamos usando o novo formato
