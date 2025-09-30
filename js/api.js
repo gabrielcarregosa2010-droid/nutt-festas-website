@@ -112,15 +112,15 @@ class ApiService {
   // Métodos de autenticação
   async login(username, password) {
     try {
-      const response = await this.request('/login', {
+      const response = await this.request('/auth/login', {
         method: 'POST',
         body: JSON.stringify({ username, password })
       });
 
       if (response.success) {
-        this.token = response.token;
+        this.token = response.data.token;
         localStorage.setItem('authToken', this.token);
-        localStorage.setItem('user', JSON.stringify({
+        localStorage.setItem('user', JSON.stringify(response.data.user || {
           id: 'admin-001',
           username: 'admin',
           role: 'admin'
@@ -145,12 +145,12 @@ class ApiService {
   }
 
   async getMe() {
-    // Para validação simples, usar o endpoint de validate
+    // Para validação simples, usar o endpoint de auth/me
     if (!this.token) {
       throw new Error('Token não encontrado');
     }
     
-    return await this.request('/validate', {
+    return await this.request('/auth/me', {
       method: 'GET'
     });
   }

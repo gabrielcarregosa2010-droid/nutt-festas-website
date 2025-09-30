@@ -57,8 +57,21 @@ async function loadGalleryItems() {
     try {
         const response = await api.getGalleryItems({ sortBy: 'createdAt', sortOrder: 'desc' });
         
+        console.log('Response completa:', response);
+        console.log('response.data:', response.data);
+        console.log('response.data.items:', response.data?.items);
+        console.log('Tipo de response.data.items:', typeof response.data?.items);
+        
         if (response.success) {
-            galleryItems = response.data;
+            // Garantir que sempre temos um array
+            const items = response.data?.items;
+            galleryItems = Array.isArray(items) ? items : [];
+            
+            console.log('galleryItems após atribuição:', galleryItems);
+            console.log('Tipo de galleryItems:', typeof galleryItems);
+            console.log('É array?', Array.isArray(galleryItems));
+            console.log('Quantidade de itens:', galleryItems.length);
+            
             renderGalleryItems();
         } else {
             throw new Error(response.message || 'Erro ao carregar itens');
@@ -79,6 +92,17 @@ async function loadGalleryItems() {
 
 // Renderizar itens da galeria
 function renderGalleryItems() {
+    console.log('renderGalleryItems chamada');
+    console.log('galleryItems na renderização:', galleryItems);
+    console.log('Tipo de galleryItems na renderização:', typeof galleryItems);
+    console.log('É array na renderização?', Array.isArray(galleryItems));
+    
+    // Garantir que galleryItems é sempre um array
+    if (!Array.isArray(galleryItems)) {
+        console.error('galleryItems não é um array! Valor:', galleryItems);
+        galleryItems = [];
+    }
+    
     if (galleryItems.length === 0) {
         galleryContainer.innerHTML = '<p class="loading-message">Nenhum item encontrado. Adicione novos itens à galeria.</p>';
         return;
@@ -86,6 +110,7 @@ function renderGalleryItems() {
     
     galleryContainer.innerHTML = '';
     
+    console.log('Tentando fazer forEach...');
     galleryItems.forEach(item => {
         const itemElement = document.createElement('div');
         itemElement.className = 'gallery-item-admin';

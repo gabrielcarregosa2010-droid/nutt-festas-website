@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Frontend API</title>
+</head>
+<body>
+    <h1>Teste de Conexão Frontend → Backend</h1>
+    <div id="results"></div>
+    
+    <script src="js/debug.js?v=2"></script>
+    <script src="js/config.js?v=2"></script>
+    <script src="js/api.js?v=2"></script>
+    
+    <script>
+        async function testAPI() {
+            const results = document.getElementById('results');
+            
+            try {
+                results.innerHTML += '<p>🔄 Testando conexão com a API...</p>';
+                results.innerHTML += `<p>📍 API URL: ${API_BASE_URL}</p>`;
+                
+                // Teste 1: Health Check
+                results.innerHTML += '<p>🔄 Teste 1: Health Check...</p>';
+                const healthResponse = await api.healthCheck();
+                results.innerHTML += `<p>✅ Health Check: ${JSON.stringify(healthResponse)}</p>`;
+                
+                // Teste 2: Login
+                results.innerHTML += '<p>🔄 Teste 2: Login...</p>';
+                const loginResponse = await api.login('admin', 'Nutt123');
+                results.innerHTML += `<p>✅ Login: ${JSON.stringify(loginResponse)}</p>`;
+                
+                // Teste 3: Listar Galeria
+                results.innerHTML += '<p>🔄 Teste 3: Listar Galeria...</p>';
+                const galleryResponse = await api.getGalleryItems();
+                results.innerHTML += `<p>✅ Galeria: ${galleryResponse.data?.items?.length || 0} itens</p>`;
+                
+                results.innerHTML += '<p>🎉 Todos os testes passaram!</p>';
+                
+            } catch (error) {
+                results.innerHTML += `<p>❌ Erro: ${error.message}</p>`;
+                console.error('Erro no teste:', error);
+            }
+        }
+        
+        // Executar teste quando a página carregar
+        document.addEventListener('DOMContentLoaded', testAPI);
+    </script>
+</body>
+</html>

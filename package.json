@@ -24,7 +24,8 @@
   "author": "Gabriel",
   "license": "MIT",
   "dependencies": {
-    "vercel": "^48.1.6",
-    "mongoose": "^8.0.3"
+    "axios": "^1.12.2",
+    "mongoose": "^8.0.3",
+    "vercel": "^48.1.6"
   }
 }
