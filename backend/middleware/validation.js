@@ -73,21 +73,21 @@ const validateGalleryItemUpdate = [
   body('images')
     .optional()
     .isArray()
-    .withMessage('Images deve ser um array'),
-    
-  body('images.*.data')
-    .optional()
-    .custom((value) => {
-      if (value && !value.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,/)) {
-        throw new Error('Formato de arquivo inválido');
+    .withMessage('Images deve ser um array')
+    .custom((images) => {
+      if (images && Array.isArray(images)) {
+        for (let i = 0; i < images.length; i++) {
+          const image = images[i];
+          if (image.data && !image.data.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,/)) {
+            throw new Error(`Formato de arquivo inválido na imagem ${i + 1}`);
+          }
+          if (image.type && !['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm'].includes(image.type)) {
+            throw new Error(`Tipo de arquivo não suportado na imagem ${i + 1}`);
+          }
+        }
       }
       return true;
     }),
-    
-  body('images.*.type')
-    .optional()
-    .isIn(['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm'])
-    .withMessage('Tipo de arquivo não suportado'),
     
   // Validação para o formato antigo (compatibilidade)
   body('fileData')
