@@ -37,7 +37,10 @@ export default async function handler(req, res) {
       return res.json({
         success: true,
         message: 'Galeria carregada com sucesso',
-        data: mockGalleryItems
+        data: {
+          items: mockGalleryItems,
+          total: mockGalleryItems.length
+        }
       });
     } catch (error) {
       console.error('Erro ao carregar galeria:', error);
