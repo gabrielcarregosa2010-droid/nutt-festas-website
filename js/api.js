@@ -229,7 +229,10 @@ async function checkApiConnection() {
     const health = await api.healthCheck();
     if (!health || !health.success) {
       window.DebugConfig.warn('⚠️ API Health Check falhou:', health);
-      showNotification('Servidor indisponível. Algumas funcionalidades podem não funcionar.', 'error');
+      // Só mostrar notificação se realmente houver um problema crítico
+      if (!health || health.message === 'API indisponível') {
+        showNotification('Servidor indisponível. Algumas funcionalidades podem não funcionar.', 'error');
+      }
       return false;
     }
     window.DebugConfig.log('✅ API conectada com sucesso');
@@ -244,13 +247,13 @@ async function checkApiConnection() {
   }
 }
 
-// Verificar conexão ao carregar a página
-document.addEventListener('DOMContentLoaded', () => {
-  // Só verificar se estiver na área admin
-  if (window.location.pathname.includes('admin')) {
-    checkApiConnection();
-  }
-});
+// Verificar conexão ao carregar a página (desabilitado para evitar falsos positivos)
+// document.addEventListener('DOMContentLoaded', () => {
+//   // Só verificar se estiver na área admin
+//   if (window.location.pathname.includes('admin')) {
+//     checkApiConnection();
+//   }
+// });
 
 // Exportar para uso global
 window.api = api;
