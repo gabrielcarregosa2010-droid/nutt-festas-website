@@ -5,6 +5,13 @@ const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   
   if (!errors.isEmpty()) {
+    console.error('❌ Erros de validação encontrados:', {
+      url: req.url,
+      method: req.method,
+      errors: errors.array(),
+      body: req.body
+    });
+    
     return res.status(400).json({
       success: false,
       message: 'Dados inválidos',
@@ -16,6 +23,7 @@ const handleValidationErrors = (req, res, next) => {
     });
   }
   
+  console.log('✅ Validação passou com sucesso para:', req.url);
   next();
 };
 

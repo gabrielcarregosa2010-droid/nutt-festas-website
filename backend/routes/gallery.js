@@ -111,6 +111,22 @@ router.get('/:id', async (req, res) => {
 // @access  Private (Admin only)
 router.post('/', authenticateToken, requireAdmin, validateGalleryItemCreate, async (req, res) => {
   try {
+    console.log('📝 Dados recebidos para criação:', {
+      title: req.body.title,
+      caption: req.body.caption,
+      category: req.body.category,
+      date: req.body.date,
+      isActive: req.body.isActive,
+      imagesCount: req.body.images ? req.body.images.length : 0,
+      imagesStructure: req.body.images ? req.body.images.map((img, i) => ({
+        index: i,
+        hasData: !!img.data,
+        hasType: !!img.type,
+        hasName: !!img.name,
+        dataLength: img.data ? img.data.length : 0
+      })) : []
+    });
+    
     const { title, caption, category, date, isActive, images } = req.body;
 
     // Verificar tamanho dos arquivos
@@ -149,13 +165,25 @@ router.post('/', authenticateToken, requireAdmin, validateGalleryItemCreate, asy
     });
 
   } catch (error) {
-    console.error('Erro ao criar item da galeria:', error);
+    console.error('❌ Erro ao criar item da galeria:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+      requestBody: {
+        title: req.body.title,
+        caption: req.body.caption,
+        category: req.body.category,
+        imagesCount: req.body.images ? req.body.images.length : 0
+      }
+    });
     
     if (error.name === 'ValidationError') {
       const errors = Object.values(error.errors).map(err => ({
         field: err.path,
         message: err.message
       }));
+      
+      console.error('❌ Erros de validação:', errors);
       
       return res.status(400).json({
         success: false,
