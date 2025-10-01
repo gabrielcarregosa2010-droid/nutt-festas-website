@@ -24,7 +24,7 @@ export default async function handler(req, res) {
   };
 
   // Rota de login
-  if (req.method === 'POST' && req.url === '/api/auth/login') {
+  if (req.method === 'POST' && (req.url === '/login' || req.url === '/api/auth/login')) {
     try {
       const { username, password } = req.body;
 
@@ -72,7 +72,7 @@ export default async function handler(req, res) {
   }
 
   // Rota de verificação de token
-  if (req.method === 'GET' && req.url === '/api/auth/verify') {
+  if (req.method === 'GET' && (req.url === '/verify' || req.url === '/api/auth/verify')) {
     try {
       const authHeader = req.headers.authorization;
       const token = authHeader && authHeader.split(' ')[1];
