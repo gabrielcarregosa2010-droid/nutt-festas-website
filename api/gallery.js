@@ -159,21 +159,15 @@ export default async function handler(req, res) {
 
         const token = authHeader.substring(7);
         
-        // Validação simples do token (base64)
+        // Validação JWT (igual ao auth/me.js)
         try {
-          const decoded = Buffer.from(token, 'base64').toString('utf-8');
-          const tokenData = JSON.parse(decoded);
-          
-          if (!tokenData.expires || Date.now() > new Date(tokenData.expires).getTime()) {
-            return res.status(401).json({
-              success: false,
-              message: 'Token expirado'
-            });
-          }
-        } catch (error) {
+          const jwt = require('jsonwebtoken');
+          const decoded = jwt.verify(token, process.env.JWT_SECRET || 'nutt-festas-secret-key-2024');
+          // Token válido, continuar com a criação
+        } catch (jwtError) {
           return res.status(401).json({
             success: false,
-            message: 'Token inválido'
+            message: 'Token inválido ou expirado'
           });
         }
 
