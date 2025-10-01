@@ -1,81 +1,7 @@
 // Função serverless para operações individuais da galeria (GET, PUT, DELETE por ID)
-import mongoose from 'mongoose';
-
-// Schema do item da galeria (mesmo do arquivo principal)
-const galleryItemSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  caption: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  fileData: {
-    type: String,
-    required: true
-  },
-  fileType: {
-    type: String,
-    required: true
-  },
-  fileSize: {
-    type: Number,
-    required: true
-  },
-  images: [{
-    src: String,
-    alt: String,
-    width: Number,
-    height: Number
-  }],
-  category: {
-    type: String,
-    default: 'geral'
-  },
-  date: {
-    type: Date,
-    required: false,
-    default: Date.now
-  },
-  isActive: {
-    type: Boolean,
-    default: true
-  }
-}, {
-  timestamps: true,
-  toJSON: {
-    transform: function(doc, ret) {
-      ret.id = ret._id;
-      delete ret._id;
-      delete ret.__v;
-      return ret;
-    }
-  }
-});
-
-// Função para conectar ao MongoDB
-async function connectDB() {
-  if (mongoose.connections[0].readyState) {
-    return;
-  }
-
-  try {
-    await mongoose.connect(process.env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
-    });
-    console.log('✅ MongoDB conectado');
-  } catch (error) {
-    console.error('❌ Erro ao conectar MongoDB:', error);
-    throw error;
-  }
-}
-
-// Modelo do item da galeria
-const GalleryItem = mongoose.models.GalleryItem || mongoose.model('GalleryItem', galleryItemSchema);
+import { connectDB } from '../config/database.js';
+import { GalleryItem } from '../models/GalleryItem.js';
+import jwt from 'jsonwebtoken';
 
 // Função para validar token de autenticação
 function validateToken(authHeader) {
@@ -86,15 +12,13 @@ function validateToken(authHeader) {
   const token = authHeader.substring(7);
   
   try {
-    const decoded = Buffer.from(token, 'base64').toString('utf-8');
-    const tokenData = JSON.parse(decoded);
-    
-    if (!tokenData.expires || Date.now() > new Date(tokenData.expires).getTime()) {
+    const secret = process.env.JWT_SECRET || 'nutt-festas-secret-key-2024';
+    const decoded = jwt.verify(token, secret);
+    return { valid: true, user: decoded };
+  } catch (error) {
+    if (error.name === 'TokenExpiredError') {
       return { valid: false, error: 'Token expirado' };
     }
-    
-    return { valid: true };
-  } catch (error) {
     return { valid: false, error: 'Token inválido' };
   }
 }
