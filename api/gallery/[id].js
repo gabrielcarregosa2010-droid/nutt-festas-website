@@ -1,7 +1,82 @@
 // Função serverless para operações individuais da galeria (GET, PUT, DELETE por ID)
-import { connectDB } from '../config/database.js';
-import { GalleryItem } from '../models/GalleryItem.js';
+import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
+
+// Schema do item da galeria (mesmo do arquivo principal)
+const galleryItemSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  caption: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  fileData: {
+    type: String,
+    required: true
+  },
+  fileType: {
+    type: String,
+    required: true
+  },
+  fileSize: {
+    type: Number,
+    required: true
+  },
+  images: [{
+    src: String,
+    alt: String,
+    width: Number,
+    height: Number
+  }],
+  category: {
+    type: String,
+    default: 'geral'
+  },
+  date: {
+    type: Date,
+    required: false,
+    default: Date.now
+  },
+  isActive: {
+    type: Boolean,
+    default: true
+  }
+}, {
+  timestamps: true,
+  toJSON: {
+    transform: function(doc, ret) {
+      ret.id = ret._id;
+      delete ret._id;
+      delete ret.__v;
+      return ret;
+    }
+  }
+});
+
+// Função para conectar ao MongoDB
+async function connectDB() {
+  if (mongoose.connections[0].readyState) {
+    return;
+  }
+
+  try {
+    await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    });
+    console.log('✅ MongoDB conectado');
+  } catch (error) {
+    console.error('❌ Erro ao conectar MongoDB:', error);
+    throw error;
+  }
+}
+
+// Modelo do item da galeria
+const GalleryItem = mongoose.models.GalleryItem || mongoose.model('GalleryItem', galleryItemSchema);
 
 // Função para validar token de autenticação
 function validateToken(authHeader) {
