@@ -113,18 +113,23 @@ export default async function handler(req, res) {
           const items = await GalleryItem.find({ isActive: true })
             .sort(sortObj)
             .skip(skip)
-            .limit(options.limit)
-            .lean();
+            .limit(options.limit);
 
           const total = await GalleryItem.countDocuments({ isActive: true });
 
-          console.log(`📊 Encontrados ${items.length} itens da galeria (total: ${total})`);
+          // Transformar os itens para incluir o campo 'id' corretamente
+          const transformedItems = items.map(item => {
+            const itemObj = item.toJSON();
+            return itemObj;
+          });
+
+          console.log(`📊 Encontrados ${transformedItems.length} itens da galeria (total: ${total})`);
 
           return res.json({
             success: true,
             message: 'Galeria carregada com sucesso',
             data: {
-              items,
+              items: transformedItems,
               total,
               pagination: {
                 currentPage: options.page,
