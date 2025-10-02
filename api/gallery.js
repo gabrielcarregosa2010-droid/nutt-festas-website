@@ -200,14 +200,31 @@ export default async function handler(req, res) {
             });
           }
 
+          // Processar dados das imagens corretamente
+          let processedFileData = fileData;
+          let processedFileType = fileType;
+          let processedImages = [];
+
+          if (images && images.length > 0) {
+            // Usar a primeira imagem como fileData principal
+            processedFileData = images[0].data;
+            processedFileType = images[0].type || 'image/jpeg';
+            
+            // Mapear todas as imagens para o formato correto
+            processedImages = images.map((img, index) => ({
+              src: img.data,
+              alt: img.name || `${title} - Imagem ${index + 1}`
+            }));
+          }
+
           // Criar novo item
           const newItem = new GalleryItem({
             title: title.trim(),
             caption: caption.trim(),
-            fileData: fileData || (images && images[0] ? images[0].src : ''),
-            fileType: fileType || 'image/jpeg',
-            fileSize: req.body.fileSize || 1024,
-            images: images || [],
+            fileData: processedFileData,
+            fileType: processedFileType,
+            fileSize: processedFileData ? Math.round(processedFileData.length * (3/4)) : 0,
+            images: processedImages,
             category: category || 'geral',
             date: date ? new Date(date) : new Date(),
             isActive: isActive !== undefined ? isActive : true
