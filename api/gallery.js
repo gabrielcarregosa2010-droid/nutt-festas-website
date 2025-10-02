@@ -268,6 +268,181 @@ export default async function handler(req, res) {
           });
         }
 
+      case 'PUT':
+        // Atualizar item existente (requer autenticação)
+        const authHeaderPut = req.headers.authorization;
+        if (!authHeaderPut || !authHeaderPut.startsWith('Bearer ')) {
+          return res.status(401).json({
+            success: false,
+            message: 'Token de autenticação necessário'
+          });
+        }
+
+        const tokenPut = authHeaderPut.substring(7);
+        
+        // Validação simples do token (base64)
+        try {
+          const decoded = Buffer.from(tokenPut, 'base64').toString('utf-8');
+          const tokenData = JSON.parse(decoded);
+          
+          if (!tokenData.expires || Date.now() > new Date(tokenData.expires).getTime()) {
+            return res.status(401).json({
+              success: false,
+              message: 'Token expirado'
+            });
+          }
+        } catch (error) {
+          return res.status(401).json({
+            success: false,
+            message: 'Token inválido'
+          });
+        }
+
+        try {
+          const { title, caption, category, date, isActive, images, fileData, fileType } = req.body;
+          
+          // Extrair ID da URL
+          const urlParts = req.url.split('/');
+          const itemId = urlParts[urlParts.length - 1];
+          
+          if (!itemId || itemId === 'gallery') {
+            return res.status(400).json({
+              success: false,
+              message: 'ID do item é obrigatório'
+            });
+          }
+
+          console.log('📝 Dados recebidos para atualização na API Vercel:', {
+            itemId,
+            title,
+            caption,
+            category,
+            date,
+            isActive,
+            hasImages: images && images.length > 0,
+            hasFileData: !!fileData
+          });
+
+          const updateData = {};
+          if (title !== undefined) updateData.title = title;
+          if (caption !== undefined) updateData.caption = caption;
+          if (category !== undefined) updateData.category = category;
+          if (date !== undefined) updateData.date = date;
+          if (isActive !== undefined) updateData.isActive = isActive;
+
+          // Suporte para múltiplas imagens (novo formato)
+          if (images && Array.isArray(images) && images.length > 0) {
+            // Validar cada imagem
+            for (let i = 0; i < images.length; i++) {
+              const image = images[i];
+              if (!image.data || (!image.name && !image.type)) {
+                return res.status(400).json({
+                  success: false,
+                  message: `Dados da imagem ${i + 1} são inválidos`
+                });
+              }
+
+              // Verificar tamanho do arquivo base64 (aproximadamente) apenas para novas imagens
+              if (!image.isExisting) {
+                const base64Size = image.data.length * (3/4);
+                const maxSize = 10 * 1024 * 1024; // 10MB
+
+                if (base64Size > maxSize) {
+                  return res.status(400).json({
+                    success: false,
+                    message: `Imagem ${i + 1} muito grande. Tamanho máximo: 10MB`
+                  });
+                }
+              }
+            }
+
+            // Converter imagens para o formato do banco
+            updateData.images = images.map((img, index) => ({
+              src: img.data,
+              alt: img.name || img.type || `${title} - Imagem ${index + 1}`
+            }));
+
+            // Usar a primeira imagem como fileData principal para compatibilidade
+            updateData.fileData = images[0].data;
+            updateData.fileType = images[0].type || 'image/jpeg';
+            updateData.fileSize = Math.round(images[0].data.length * (3/4));
+          }
+          // Compatibilidade com formato antigo (uma única imagem)
+          else if (fileData !== undefined) {
+            if (fileData) {
+              // Verificar tamanho do arquivo se fornecido
+              const base64Size = fileData.length * (3/4);
+              const maxSize = 10 * 1024 * 1024; // 10MB
+
+              if (base64Size > maxSize) {
+                return res.status(400).json({
+                  success: false,
+                  message: 'Arquivo muito grande. Tamanho máximo: 10MB'
+                });
+              }
+            }
+            
+            updateData.fileData = fileData;
+            if (fileType !== undefined) updateData.fileType = fileType;
+            if (fileData) updateData.fileSize = Math.round(fileData.length * (3/4));
+          }
+
+          const updatedItem = await GalleryItem.findOneAndUpdate(
+            { _id: itemId },
+            updateData,
+            { new: true, runValidators: true }
+          );
+
+          if (!updatedItem) {
+            return res.status(404).json({
+              success: false,
+              message: 'Item não encontrado'
+            });
+          }
+
+          console.log('✅ Item atualizado com sucesso:', {
+            id: updatedItem._id,
+            title: updatedItem.title,
+            category: updatedItem.category
+          });
+
+          return res.status(200).json({
+            success: true,
+            message: 'Item atualizado com sucesso',
+            data: {
+              item: updatedItem
+            }
+          });
+
+        } catch (error) {
+          console.error('Erro ao atualizar item da galeria:', error);
+          
+          if (error.name === 'CastError') {
+            return res.status(400).json({
+              success: false,
+              message: 'ID inválido'
+            });
+          }
+          
+          if (error.name === 'ValidationError') {
+            const errors = Object.values(error.errors).map(err => ({
+              field: err.path,
+              message: err.message
+            }));
+            
+            return res.status(400).json({
+              success: false,
+              message: 'Dados inválidos',
+              errors
+            });
+          }
+
+          return res.status(500).json({
+            success: false,
+            message: 'Erro interno do servidor'
+          });
+        }
+
       default:
         return res.status(405).json({
           success: false,

@@ -222,7 +222,7 @@ function openEditItemModal(id) {
     if (item.images && item.images.length > 0) {
         // Converter imagens existentes para o formato de selectedFiles
         selectedFiles = item.images.map((img, index) => ({
-            data: img.src || img.data,
+            data: img.src, // Usar 'src' que é a propriedade correta no banco
             type: 'image/jpeg', // Assumir JPEG se não especificado
             name: img.alt || `Imagem ${index + 1}`,
             size: 0, // Tamanho não disponível para imagens existentes

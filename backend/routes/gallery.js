@@ -218,15 +218,23 @@ router.put('/:id', authenticateToken, requireAdmin, validateGalleryItemUpdate, a
       // Validar cada imagem
       for (let i = 0; i < images.length; i++) {
         const image = images[i];
-        if (!image.data || (!image.name && !image.type)) {
+        if (!image.data) {
           return res.status(400).json({
             success: false,
-            message: `Dados da imagem ${i + 1} são inválidos`
+            message: `Dados da imagem ${i + 1} são obrigatórios`
+          });
+        }
+
+        // Para imagens existentes, ser mais flexível com validação
+        if (!image.isExisting && (!image.name && !image.type)) {
+          return res.status(400).json({
+            success: false,
+            message: `Nome ou tipo da imagem ${i + 1} são obrigatórios para novas imagens`
           });
         }
 
         // Verificar tamanho do arquivo base64 (aproximadamente) apenas para novas imagens
-        if (!image.isExisting) {
+        if (!image.isExisting && image.data.startsWith('data:')) {
           const base64Size = image.data.length * (3/4);
           const maxSize = 10 * 1024 * 1024; // 10MB
 

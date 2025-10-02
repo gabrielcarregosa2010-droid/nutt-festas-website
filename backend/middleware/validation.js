@@ -23,6 +23,66 @@ const handleValidationErrors = (req, res, next) => {
     });
   }
   
+  // Validar images se fornecido
+  if (req.body.images) {
+      if (!Array.isArray(req.body.images)) {
+          errors.push({
+              type: 'field',
+              value: req.body.images,
+              msg: 'Images deve ser um array',
+              path: 'images',
+              location: 'body'
+          });
+      } else {
+          req.body.images.forEach((image, index) => {
+              // Dados da imagem são sempre obrigatórios
+              if (!image.data || image.data.trim() === '') {
+                  errors.push({
+                      type: 'field',
+                      value: req.body.images,
+                      msg: `Dados da imagem ${index + 1} são obrigatórios`,
+                      path: 'images',
+                      location: 'body'
+                  });
+              }
+              
+              // Para imagens existentes, type é opcional
+              // Para novas imagens, type é obrigatório
+              if (!image.isExisting && !image.type) {
+                  errors.push({
+                      type: 'field',
+                      value: req.body.images,
+                      msg: `Tipo da imagem ${index + 1} é obrigatório`,
+                      path: 'images',
+                      location: 'body'
+                  });
+              }
+              
+              // Validar formato base64 apenas para novas imagens
+              if (image.data && !image.isExisting && !image.data.startsWith('data:')) {
+                  errors.push({
+                      type: 'field',
+                      value: req.body.images,
+                      msg: `Imagem ${index + 1} deve estar em formato base64`,
+                      path: 'images',
+                      location: 'body'
+                  });
+              }
+              
+              // Validar tipo de arquivo suportado
+              if (image.type && !['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'].includes(image.type)) {
+                  errors.push({
+                      type: 'field',
+                      value: req.body.images,
+                      msg: `Tipo de imagem ${index + 1} não suportado`,
+                      path: 'images',
+                      location: 'body'
+                  });
+              }
+          });
+      }
+  }
+  
   console.log('✅ Validação passou com sucesso para:', req.url);
   next();
 };
@@ -132,21 +192,27 @@ const validateGalleryItemUpdate = [
           const image = images[i];
           
           // Verificar se tem dados obrigatórios
-          if (!image.data) {
+          if (!image.data || image.data.trim() === '') {
             throw new Error(`Dados da imagem ${i + 1} são obrigatórios`);
           }
-          if (!image.type) {
-            throw new Error(`Tipo da imagem ${i + 1} é obrigatório`);
+          
+          // Para imagens existentes, o tipo pode ser opcional ou inferido
+          if (image.type) {
+            // Verificar tipo de arquivo suportado apenas se fornecido
+            if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'].includes(image.type)) {
+              throw new Error(`Tipo de arquivo não suportado na imagem ${i + 1}`);
+            }
           }
           
-          // Verificar formato base64
-          if (!image.data.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,/)) {
+          // Verificar formato base64 apenas para novas imagens (não existentes)
+          if (!image.isExisting && !image.data.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,/)) {
             throw new Error(`Formato de arquivo inválido na imagem ${i + 1}`);
           }
           
-          // Verificar tipo de arquivo suportado
-          if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm'].includes(image.type)) {
-            throw new Error(`Tipo de arquivo não suportado na imagem ${i + 1}`);
+          // Para imagens existentes, permitir dados sem prefixo base64
+          if (image.isExisting && !image.data.match(/^data:/) && !image.data.match(/^[A-Za-z0-9+/]+=*$/)) {
+            // Se não é base64 nem data URL, pode ser uma URL ou dados válidos
+            // Permitir para compatibilidade com imagens existentes
           }
         }
       }
