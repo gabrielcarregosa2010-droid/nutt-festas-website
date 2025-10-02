@@ -226,7 +226,7 @@ function openEditItemModal(id) {
             type: 'image/jpeg', // Assumir JPEG se não especificado
             name: img.alt || `Imagem ${index + 1}`,
             size: 0, // Tamanho não disponível para imagens existentes
-            id: `existing_${index}_${Date.now()}`,
+            id: `existing_${item.id}_${index}_${Date.now()}`, // ID mais único
             isExisting: true
         }));
         
@@ -238,7 +238,7 @@ function openEditItemModal(id) {
             type: item.fileType,
             name: 'Imagem existente',
             size: 0,
-            id: `existing_single_${Date.now()}`,
+            id: `existing_single_${item.id}_${Date.now()}`, // ID mais único
             isExisting: true
         }];
         
@@ -310,14 +310,18 @@ async function saveItem(e) {
                 isActive 
             };
             
-            // Se novas imagens foram selecionadas, incluir nos dados
+            // Sempre incluir as imagens (existentes ou novas) durante a edição
             if (selectedFiles.length > 0) {
                 updateData.images = selectedFiles.map(file => ({
                     data: file.data,
                     type: file.type,
                     name: file.name,
-                    size: file.size
+                    size: file.size,
+                    isExisting: file.isExisting || false
                 }));
+            } else {
+                // Se não há imagens selecionadas, enviar array vazio para limpar as imagens
+                updateData.images = [];
             }
             
             response = await api.updateGalleryItem(currentItemId, updateData);
@@ -528,7 +532,7 @@ function updateFilePreview() {
         previewHTML += `
             <div class="image-preview-item" data-file-id="${file.id}">
                 <img src="${file.data}" alt="Preview ${index + 1}">
-                <button type="button" class="remove-image" onclick="removeFile('${file.id}')" title="Remover imagem">
+                <button type="button" class="remove-image" data-file-id="${file.id}" title="Remover imagem">
                     <i class="fas fa-times"></i>
                 </button>
                 <div class="image-info">
@@ -548,6 +552,17 @@ function updateFilePreview() {
     }
     
     filePreview.innerHTML = previewHTML;
+    
+    // Anexar event listeners aos botões de remoção
+    const removeButtons = filePreview.querySelectorAll('.remove-image');
+    removeButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const fileId = this.getAttribute('data-file-id');
+            removeFile(fileId);
+        });
+    });
 }
 
 // Mostrar notificação

@@ -214,44 +214,49 @@ router.put('/:id', authenticateToken, requireAdmin, validateGalleryItemUpdate, a
     if (isActive !== undefined) updateData.isActive = isActive;
 
     // Suporte para múltiplas imagens (novo formato)
-    if (images && Array.isArray(images) && images.length > 0) {
-      // Validar cada imagem
-      for (let i = 0; i < images.length; i++) {
-        const image = images[i];
-        if (!image.data) {
-          return res.status(400).json({
-            success: false,
-            message: `Dados da imagem ${i + 1} são obrigatórios`
-          });
-        }
-
-        // Para imagens existentes, ser mais flexível com validação
-        if (!image.isExisting && (!image.name && !image.type)) {
-          return res.status(400).json({
-            success: false,
-            message: `Nome ou tipo da imagem ${i + 1} são obrigatórios para novas imagens`
-          });
-        }
-
-        // Verificar tamanho do arquivo base64 (aproximadamente) apenas para novas imagens
-        if (!image.isExisting && image.data.startsWith('data:')) {
-          const base64Size = image.data.length * (3/4);
-          const maxSize = 10 * 1024 * 1024; // 10MB
-
-          if (base64Size > maxSize) {
+    if (images !== undefined) {
+      if (Array.isArray(images) && images.length > 0) {
+        // Validar cada imagem
+        for (let i = 0; i < images.length; i++) {
+          const image = images[i];
+          if (!image.data || image.data.trim() === '') {
             return res.status(400).json({
               success: false,
-              message: `Imagem ${i + 1} muito grande. Tamanho máximo: 10MB`
+              message: `Dados da imagem ${i + 1} são obrigatórios`
             });
           }
-        }
-      }
 
-      // Converter imagens para o formato do banco
-      updateData.images = images.map((img, index) => ({
-        src: img.data,
-        alt: img.name || img.type || `${title} - Imagem ${index + 1}`
-      }));
+          // Para imagens existentes, ser mais flexível com validação
+          if (!image.isExisting && (!image.name && !image.type)) {
+            return res.status(400).json({
+              success: false,
+              message: `Nome ou tipo da imagem ${i + 1} são obrigatórios para novas imagens`
+            });
+          }
+
+          // Verificar tamanho do arquivo base64 (aproximadamente) apenas para novas imagens
+          if (!image.isExisting && image.data.startsWith('data:')) {
+            const base64Size = image.data.length * (3/4);
+            const maxSize = 10 * 1024 * 1024; // 10MB
+
+            if (base64Size > maxSize) {
+              return res.status(400).json({
+                success: false,
+                message: `Imagem ${i + 1} muito grande. Tamanho máximo: 10MB`
+              });
+            }
+          }
+        }
+
+        // Converter imagens para o formato do banco
+        updateData.images = images.map((img, index) => ({
+          src: img.data,
+          alt: img.name || img.type || `${title || 'Item'} - Imagem ${index + 1}`
+        }));
+      } else {
+        // Se images é um array vazio, limpar as imagens
+        updateData.images = [];
+      }
 
       // Limpar campos antigos se estamos usando o novo formato
       updateData.fileData = undefined;
