@@ -8,6 +8,15 @@ let maxFiles = 3; // Máximo de novas imagens por vez
 let isLoading = false;
 let originalImagesSnapshot = []; // Mantém referência das imagens originais para comparação
 let currentFilter = 'all'; // Filtro de status: all | active | inactive
+// Limites e opções de compressão para evitar erro 413
+const MAX_COMPRESSED_IMAGE_SIZE = 1.5 * 1024 * 1024; // ~1.5MB por imagem
+const MAX_TOTAL_IMAGES_PAYLOAD = 3.5 * 1024 * 1024; // ~3.5MB no total do payload
+const IMAGE_COMPRESS_OPTIONS = {
+    maxWidth: 1600,
+    maxHeight: 1600,
+    quality: 0.75,
+    outputType: 'image/jpeg'
+};
 
 // Elementos DOM
 const itemModal = document.getElementById('itemModal');
@@ -375,6 +384,15 @@ async function saveItem(e) {
                         isExisting: file.isExisting || false
                     }));
                     console.log('🔍 DEBUG - updateData.images:', updateData.images.length, 'imagens (alteradas)');
+
+                    // Validação de payload total para evitar 413
+                    const totalSize = updateData.images.reduce((sum, f) => sum + (f.size || 0), 0);
+                    if (totalSize > MAX_TOTAL_IMAGES_PAYLOAD) {
+                        showNotification('As imagens selecionadas excedem o limite total (~3.5MB). Reduza a quantidade ou resolução.', 'error');
+                        submitButton.disabled = false;
+                        submitButton.textContent = 'Atualizar';
+                        return;
+                    }
                 }
             }
             
@@ -394,6 +412,15 @@ async function saveItem(e) {
                     size: file.size
                 }))
             };
+
+            // Validação de payload total para evitar 413
+            const totalSize = newItemData.images.reduce((sum, f) => sum + (f.size || 0), 0);
+            if (totalSize > MAX_TOTAL_IMAGES_PAYLOAD) {
+                showNotification('As imagens selecionadas excedem o limite total (~3.5MB). Reduza a quantidade ou resolução.', 'error');
+                submitButton.disabled = false;
+                submitButton.textContent = 'Salvar';
+                return;
+            }
             
             response = await api.createGalleryItem(newItemData);
         }
@@ -507,8 +534,66 @@ function setupFileUpload() {
         handleFiles(this.files);
     });
     
+    // Utilitário: comprimir imagem usando canvas
+    function compressImage(file, options = IMAGE_COMPRESS_OPTIONS) {
+        return new Promise((resolve, reject) => {
+            try {
+                const img = new Image();
+                const url = URL.createObjectURL(file);
+                img.onload = () => {
+                    try {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        let { width, height } = img;
+
+                        const ratio = Math.min(options.maxWidth / width, options.maxHeight / height, 1);
+                        const targetWidth = Math.round(width * ratio);
+                        const targetHeight = Math.round(height * ratio);
+                        canvas.width = targetWidth;
+                        canvas.height = targetHeight;
+                        ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+
+                        canvas.toBlob(async (blob) => {
+                            try {
+                                if (!blob) {
+                                    reject(new Error('Falha ao comprimir a imagem.'));
+                                    return;
+                                }
+
+                                const reader = new FileReader();
+                                reader.onloadend = () => {
+                                    resolve({
+                                        data: reader.result,
+                                        type: blob.type || options.outputType,
+                                        name: file.name,
+                                        size: blob.size
+                                    });
+                                };
+                                reader.onerror = () => reject(new Error('Erro ao ler imagem comprimida.'));
+                                reader.readAsDataURL(blob);
+                            } catch (err) {
+                                reject(err);
+                            }
+                        }, options.outputType, options.quality);
+                    } catch (err) {
+                        reject(err);
+                    } finally {
+                        URL.revokeObjectURL(url);
+                    }
+                };
+                img.onerror = () => {
+                    URL.revokeObjectURL(url);
+                    reject(new Error('Não foi possível carregar a imagem para compressão.'));
+                };
+                img.src = url;
+            } catch (err) {
+                reject(err);
+            }
+        });
+    }
+
     // Processar arquivos
-    function handleFiles(files) {
+    async function handleFiles(files) {
         if (files.length === 0) return;
         
         // Limite conta apenas novas imagens nesta sessão (não conta imagens existentes carregadas)
@@ -521,41 +606,42 @@ function setupFileUpload() {
             return;
         }
         
-        // Processar cada arquivo
-        Array.from(files).forEach(file => {
-            // Validar tipo de arquivo (apenas imagens agora)
-            if (!file.type.startsWith('image/')) {
-                fileError.textContent = 'Por favor, selecione apenas arquivos de imagem (JPG, JPEG, PNG, GIF, WebP).';
-                fileError.style.display = 'block';
-                return;
-            }
-            
-            // Validar tamanho do arquivo (máximo 5MB)
-            if (file.size > 5 * 1024 * 1024) {
-                fileError.textContent = 'Cada imagem deve ter no máximo 5MB.';
-                fileError.style.display = 'block';
-                return;
-            }
-            
-            // Ler o arquivo
-            const reader = new FileReader();
-            
-            reader.onload = function(e) {
+        // Processar cada arquivo, comprimindo antes de adicionar
+        for (const file of Array.from(files)) {
+            try {
+                // Validar tipo de arquivo (apenas imagens agora)
+                if (!file.type.startsWith('image/')) {
+                    fileError.textContent = 'Por favor, selecione apenas arquivos de imagem (JPG, JPEG, PNG, GIF, WebP).';
+                    fileError.style.display = 'block';
+                    continue;
+                }
+
+                // Comprimir imagem para reduzir payload e evitar 413
+                const compressed = await compressImage(file);
+
+                // Validar tamanho após compressão
+                if (compressed.size > MAX_COMPRESSED_IMAGE_SIZE) {
+                    fileError.textContent = 'Imagem ainda muito grande após compressão (limite ~1.5MB). Reduza a resolução.';
+                    fileError.style.display = 'block';
+                    continue;
+                }
+
                 const fileObj = {
-                    data: e.target.result,
-                    type: file.type,
-                    name: file.name,
-                    size: file.size,
-                    id: String(Date.now() + Math.random()) // ID único para cada arquivo (string)
+                    data: compressed.data,
+                    type: compressed.type,
+                    name: compressed.name,
+                    size: compressed.size,
+                    id: String(Date.now() + Math.random())
                 };
-                
+
                 selectedFiles.push(fileObj);
                 updateFilePreview();
                 fileError.style.display = 'none';
-            };
-            
-            reader.readAsDataURL(file);
-        });
+            } catch (err) {
+                fileError.textContent = 'Falha ao processar imagem: ' + (err?.message || 'erro desconhecido');
+                fileError.style.display = 'block';
+            }
+        }
     }
 }
 

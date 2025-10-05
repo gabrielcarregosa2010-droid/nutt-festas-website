@@ -135,9 +135,6 @@ document.addEventListener('DOMContentLoaded', async function() {
                         <span id="modalCounter">1 / 1</span>
                     </div>
                     <div class="modal-actions">
-                        <button class="modal-action-btn fullscreen-btn" id="fullscreenBtn" title="Tela cheia">
-                            <i class="fas fa-expand"></i>
-                        </button>
                         <button class="modal-action-btn close-btn" id="closeBtn" title="Fechar">
                             <i class="fas fa-times"></i>
                         </button>
@@ -200,7 +197,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Eventos do modal
         modal.querySelector('#closeBtn').addEventListener('click', closeModal);
         modal.querySelector('.modal-backdrop').addEventListener('click', closeModal);
-        modal.querySelector('#fullscreenBtn').addEventListener('click', toggleFullscreen);
+        // Removido botão de tela cheia por solicitação
         
         document.addEventListener('keydown', handleKeyPress);
         
@@ -366,26 +363,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     }
     
-    function toggleFullscreen() {
-        const modal = document.getElementById('galleryModal');
-        const fullscreenBtn = document.getElementById('fullscreenBtn');
-        
-        if (!document.fullscreenElement) {
-            modal.requestFullscreen().then(() => {
-                fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
-                fullscreenBtn.title = 'Sair da tela cheia';
-                modal.classList.add('fullscreen-mode');
-            }).catch(err => {
-                console.log('Erro ao entrar em tela cheia:', err);
-            });
-        } else {
-            document.exitFullscreen().then(() => {
-                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
-                fullscreenBtn.title = 'Tela cheia';
-                modal.classList.remove('fullscreen-mode');
-            });
-        }
-    }
+    // Função de tela cheia removida
     
 
     
@@ -450,8 +428,6 @@ document.addEventListener('DOMContentLoaded', async function() {
                 const newImageIndex = modal.currentImageIndex < currentImages.length - 1 ? modal.currentImageIndex + 1 : 0;
                 showImageInModal(modal.currentItemIndex, newImageIndex, modal.items, modal.isFromAPI);
             }
-        } else if (e.key === 'f' || e.key === 'F') {
-            toggleFullscreen();
         }
     }
 });
