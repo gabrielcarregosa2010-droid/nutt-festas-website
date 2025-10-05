@@ -1,5 +1,6 @@
 // Função serverless para rotas de galeria com MongoDB
 import mongoose from 'mongoose';
+import jwt from 'jsonwebtoken';
 
 // Schema do item da galeria
 const galleryItemSchema = new mongoose.Schema({
@@ -77,6 +78,25 @@ async function connectDB() {
 // Modelo do item da galeria
 const GalleryItem = mongoose.models.GalleryItem || mongoose.model('GalleryItem', galleryItemSchema);
 
+// Validação simples de token JWT para rotas que exigem privilégio de admin
+function validateToken(authHeader) {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return { valid: false, error: 'Token de autenticação necessário' };
+  }
+
+  const token = authHeader.substring(7);
+  try {
+    const secret = process.env.JWT_SECRET || 'nutt-festas-secret-key-2024';
+    const decoded = jwt.verify(token, secret);
+    return { valid: true, user: decoded };
+  } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      return { valid: false, error: 'Token expirado' };
+    }
+    return { valid: false, error: 'Token inválido' };
+  }
+}
+
 export default async function handler(req, res) {
   // Configurar CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -97,7 +117,7 @@ export default async function handler(req, res) {
       case 'GET':
         // Buscar itens da galeria no MongoDB
         try {
-          const { page = 1, limit = 50, sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
+          const { page = 1, limit = 50, sortBy = 'createdAt', sortOrder = 'desc', includeInactive } = req.query;
           
           const options = {
             page: parseInt(page),
@@ -110,12 +130,34 @@ export default async function handler(req, res) {
           const sortObj = {};
           sortObj[options.sortBy] = options.sortOrder;
 
-          const items = await GalleryItem.find({ isActive: true })
+          // Filtro padrão: somente ativos para acesso público
+          let filter = { isActive: true };
+
+          // Se includeInactive=true, validar token e exigir perfil admin
+          if (includeInactive === 'true') {
+            const authValidation = validateToken(req.headers.authorization);
+            if (!authValidation.valid) {
+              return res.status(401).json({
+                success: false,
+                message: authValidation.error
+              });
+            }
+            if (!authValidation.user || authValidation.user.role !== 'admin') {
+              return res.status(403).json({
+                success: false,
+                message: 'Permissão insuficiente'
+              });
+            }
+            // Admin autenticado pode ver todos (ativos e inativos)
+            filter = {};
+          }
+
+          const items = await GalleryItem.find(filter)
             .sort(sortObj)
             .skip(skip)
             .limit(options.limit);
 
-          const total = await GalleryItem.countDocuments({ isActive: true });
+          const total = await GalleryItem.countDocuments(filter);
 
           // Transformar os itens para incluir o campo 'id' corretamente
           const transformedItems = items.map(item => {
@@ -123,7 +165,7 @@ export default async function handler(req, res) {
             return itemObj;
           });
 
-          console.log(`📊 Encontrados ${transformedItems.length} itens da galeria (total: ${total})`);
+          console.log(`📊 Encontrados ${transformedItems.length} itens da galeria (total: ${total}) | includeInactive=${includeInactive === 'true'}`);
 
           return res.json({
             success: true,

@@ -128,7 +128,28 @@ export default async function handler(req, res) {
       case 'GET':
         // Buscar item específico por ID
         try {
-          const item = await GalleryItem.findOne({ _id: id, isActive: true }).lean();
+          const { includeInactive } = req.query;
+
+          let query = { _id: id, isActive: true };
+
+          if (includeInactive === 'true') {
+            const authValidation = validateToken(req.headers.authorization);
+            if (!authValidation.valid) {
+              return res.status(401).json({
+                success: false,
+                message: authValidation.error
+              });
+            }
+            if (!authValidation.user || authValidation.user.role !== 'admin') {
+              return res.status(403).json({
+                success: false,
+                message: 'Permissão insuficiente'
+              });
+            }
+            query = { _id: id };
+          }
+
+          const item = await GalleryItem.findOne(query).lean();
 
           if (!item) {
             return res.status(404).json({
