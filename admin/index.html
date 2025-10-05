@@ -36,6 +36,14 @@
                     <button id="addItemBtn" class="btn btn-primary">
                         <i class="fas fa-plus"></i> Adicionar Novo Item
                     </button>
+                    <div class="filter-group" style="margin-left: 12px; display: inline-flex; align-items: center; gap: 8px;">
+                        <label for="statusFilter" style="font-weight: 600;">Filtro:</label>
+                        <select id="statusFilter" class="select-filter">
+                            <option value="all">Todos</option>
+                            <option value="active">Ativos</option>
+                            <option value="inactive">Inativos</option>
+                        </select>
+                    </div>
                 </div>
                 
                 <div id="galleryItems" class="gallery-grid">

@@ -7,6 +7,7 @@ let selectedFiles = []; // Array to store multiple files
 let maxFiles = 3; // Máximo de novas imagens por vez
 let isLoading = false;
 let originalImagesSnapshot = []; // Mantém referência das imagens originais para comparação
+let currentFilter = 'all'; // Filtro de status: all | active | inactive
 
 // Elementos DOM
 const itemModal = document.getElementById('itemModal');
@@ -22,6 +23,7 @@ const dropArea = document.getElementById('dropArea');
 const fileUpload = document.getElementById('fileUpload');
 const filePreview = document.getElementById('filePreview');
 const fileError = document.getElementById('fileError');
+const statusFilter = document.getElementById('statusFilter');
 
 // Inicializar
 document.addEventListener('DOMContentLoaded', async function() {
@@ -46,6 +48,14 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // Configurar upload de arquivos
     setupFileUpload();
+
+    // Filtro por status (Todos/Ativos/Inativos)
+    if (statusFilter) {
+        statusFilter.addEventListener('change', () => {
+            currentFilter = statusFilter.value || 'all';
+            renderGalleryItems();
+        });
+    }
 });
 
 // Carregar itens da galeria via API
@@ -104,15 +114,22 @@ function renderGalleryItems() {
         galleryItems = [];
     }
     
-    if (galleryItems.length === 0) {
-        galleryContainer.innerHTML = '<p class="loading-message">Nenhum item encontrado. Adicione novos itens à galeria.</p>';
+    // Aplicar filtro de status para exibição
+    const itemsToRender = galleryItems.filter(item => {
+        if (currentFilter === 'active') return item.isActive !== false;
+        if (currentFilter === 'inactive') return item.isActive === false;
+        return true; // all
+    });
+
+    if (itemsToRender.length === 0) {
+        galleryContainer.innerHTML = '<p class="loading-message">Nenhum item para o filtro selecionado.</p>';
         return;
     }
     
     galleryContainer.innerHTML = '';
     
-    console.log('Tentando fazer forEach...');
-    galleryItems.forEach(item => {
+    console.log('Tentando fazer forEach com filtro:', currentFilter);
+    itemsToRender.forEach(item => {
         const itemElement = document.createElement('div');
         itemElement.className = 'gallery-item-admin';
         
