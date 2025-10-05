@@ -218,8 +218,13 @@ function openEditItemModal(id) {
     // Limpar arquivos selecionados
     selectedFiles = [];
     
+    console.log('🔍 DEBUG - Abrindo edição do item:', item.id);
+    console.log('🔍 DEBUG - item.images:', item.images);
+    console.log('🔍 DEBUG - item.fileData:', item.fileData ? 'existe' : 'não existe');
+    
     // Carregar imagens existentes se houver
     if (item.images && item.images.length > 0) {
+        console.log('🔍 DEBUG - Carregando', item.images.length, 'imagens existentes');
         // Converter imagens existentes para o formato de selectedFiles
         selectedFiles = item.images.map((img, index) => ({
             data: img.src, // Usar 'src' que é a propriedade correta no banco
@@ -230,8 +235,10 @@ function openEditItemModal(id) {
             isExisting: true
         }));
         
+        console.log('🔍 DEBUG - selectedFiles após carregar imagens:', selectedFiles.length);
         updateFilePreview();
     } else if (item.fileData && item.fileType) {
+        console.log('🔍 DEBUG - Carregando imagem no formato antigo');
         // Compatibilidade com formato antigo (uma única imagem)
         selectedFiles = [{
             data: item.fileData,
@@ -242,8 +249,10 @@ function openEditItemModal(id) {
             isExisting: true
         }];
         
+        console.log('🔍 DEBUG - selectedFiles após carregar formato antigo:', selectedFiles.length);
         updateFilePreview();
     } else {
+        console.log('🔍 DEBUG - Nenhuma imagem encontrada para carregar');
         filePreview.style.display = 'none';
     }
     
@@ -310,6 +319,10 @@ async function saveItem(e) {
                 isActive 
             };
             
+            console.log('🔍 DEBUG - Editando item:', currentItemId);
+            console.log('🔍 DEBUG - selectedFiles.length:', selectedFiles.length);
+            console.log('🔍 DEBUG - selectedFiles:', selectedFiles);
+            
             // Sempre incluir as imagens (existentes ou novas) durante a edição
             if (selectedFiles.length > 0) {
                 updateData.images = selectedFiles.map(file => ({
@@ -319,9 +332,11 @@ async function saveItem(e) {
                     size: file.size,
                     isExisting: file.isExisting || false
                 }));
+                console.log('🔍 DEBUG - updateData.images:', updateData.images.length, 'imagens');
             } else {
                 // Se não há imagens selecionadas, enviar array vazio para limpar as imagens
                 updateData.images = [];
+                console.log('🔍 DEBUG - Enviando array vazio para limpar imagens');
             }
             
             response = await api.updateGalleryItem(currentItemId, updateData);

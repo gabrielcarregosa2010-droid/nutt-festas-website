@@ -206,6 +206,11 @@ router.put('/:id', authenticateToken, requireAdmin, validateGalleryItemUpdate, a
   try {
     const { title, caption, category, date, isActive, images, fileData, fileType } = req.body;
     
+    console.log('🔍 DEBUG BACKEND - PUT /:id recebido');
+    console.log('🔍 DEBUG BACKEND - ID:', req.params.id);
+    console.log('🔍 DEBUG BACKEND - images:', images ? `Array com ${images.length} itens` : 'undefined');
+    console.log('🔍 DEBUG BACKEND - fileData:', fileData ? 'existe' : 'não existe');
+    
     const updateData = {};
     if (title !== undefined) updateData.title = title;
     if (caption !== undefined) updateData.caption = caption;

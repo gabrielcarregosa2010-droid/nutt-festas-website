@@ -201,20 +201,36 @@ export default async function handler(req, res) {
             isActive: isActive !== undefined ? isActive : true
           };
 
-          // Se novas imagens foram fornecidas, atualizar
-          if (images && images.length > 0) {
-            updateData.images = images;
-            // Se há uma imagem principal, usar como fileData
-            if (images[0] && images[0].src) {
-              updateData.fileData = images[0].src;
-              updateData.fileType = 'image/jpeg';
-              updateData.fileSize = fileSize || 1024;
+          // Atualização de imagens (novo formato do admin)
+          if (Array.isArray(images)) {
+            if (images.length > 0) {
+              // Validar e converter cada imagem do payload do admin
+              const convertedImages = images.map((img, index) => {
+                if (!img || !img.data || typeof img.data !== 'string' || img.data.trim() === '') {
+                  throw new Error(`Dados da imagem ${index + 1} são inválidos`);
+                }
+                return {
+                  src: img.data,
+                  alt: img.name || img.type || `${title || existingItem.title} - Imagem ${index + 1}`
+                };
+              });
+
+              updateData.images = convertedImages;
+
+              // Usar a primeira imagem como principal para compatibilidade
+              updateData.fileData = convertedImages[0].src;
+              updateData.fileType = (images[0] && images[0].type) ? images[0].type : 'image/jpeg';
+              updateData.fileSize = Math.round(convertedImages[0].src.length * (3/4));
+            } else {
+              // Limpar imagens se um array vazio for enviado
+              updateData.images = [];
+              // Não alterar fileData aqui para preservar compatibilidade com itens antigos
             }
-          } else if (fileData) {
-            // Se fileData foi fornecido diretamente
-            updateData.fileData = fileData;
-            updateData.fileType = fileType || 'image/jpeg';
-            updateData.fileSize = fileSize || 1024;
+          } else if (fileData !== undefined) {
+            // Compatibilidade com formato antigo (uma única imagem)
+            updateData.fileData = fileData || existingItem.fileData;
+            updateData.fileType = fileType || existingItem.fileType || 'image/jpeg';
+            updateData.fileSize = fileSize || (fileData ? Math.round(fileData.length * (3/4)) : existingItem.fileSize || 1024);
           }
 
           // Atualizar item

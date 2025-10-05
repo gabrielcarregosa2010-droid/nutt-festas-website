@@ -46,18 +46,24 @@ document.addEventListener('DOMContentLoaded', async function() {
             galleryItem.setAttribute('data-index', index);
             
             let imageSrc, title, caption, hasMultipleImages = false;
-            
-            if (isFromAPI) {
-                imageSrc = item.fileData;
-                title = item.title;
-                caption = item.caption;
+
+            // Normalizar lista de imagens independente da origem
+            const imageList = isFromAPI
+                ? (Array.isArray(item.images) && item.images.length > 0
+                    ? item.images
+                    : (item.fileData ? [{ src: item.fileData, alt: item.title }] : []))
+                : (item.images || []);
+
+            // Usar a primeira imagem como principal quando existir
+            if (imageList.length > 0) {
+                imageSrc = imageList[0].src;
+                hasMultipleImages = imageList.length > 1;
             } else {
-                // Usar a primeira imagem como principal
-                imageSrc = item.images[0].src;
-                title = item.title;
-                caption = item.caption;
-                hasMultipleImages = item.images.length > 1;
+                imageSrc = '';
             }
+
+            title = item.title;
+            caption = item.caption;
             
             galleryItem.innerHTML = `
                 <img src="${imageSrc}" alt="${title}" loading="lazy">
@@ -69,7 +75,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                     <i class="fas fa-search-plus"></i>
                     ${hasMultipleImages ? `<div class="multiple-photos-indicator">
                         <i class="fas fa-images"></i>
-                        <span>${item.images.length}</span>
+                        <span>${imageList.length}</span>
                     </div>` : ''}
                 </div>
             `;
@@ -227,20 +233,24 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
         
         let currentImages, currentImage;
-        
-        if (isFromAPI) {
-            // Para API, assumir que há apenas uma imagem por item
-            currentImages = [{ src: item.fileData || '', alt: item.title || 'Imagem' }];
-            currentImage = currentImages[0];
-        } else {
-            // Para dados estáticos, usar o array de imagens
-            currentImages = item.images || [];
-            if (imageIndex < 0 || imageIndex >= currentImages.length) {
-                console.error('Índice de imagem inválido:', imageIndex);
-                return;
-            }
-            currentImage = currentImages[imageIndex];
+
+        // Normalizar lista de imagens independente da origem
+        currentImages = isFromAPI
+            ? (Array.isArray(item.images) && item.images.length > 0
+                ? item.images
+                : (item.fileData ? [{ src: item.fileData, alt: item.title }] : []))
+            : (item.images || []);
+
+        if (currentImages.length === 0) {
+            console.error('Imagem não encontrada ou sem src');
+            return;
         }
+
+        // Ajustar índice dentro dos limites
+        if (imageIndex < 0 || imageIndex >= currentImages.length) {
+            imageIndex = 0;
+        }
+        currentImage = currentImages[imageIndex];
         
         if (!currentImage || !currentImage.src) {
             console.error('Imagem não encontrada ou sem src');
@@ -316,21 +326,20 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Gerar thumbnails das imagens do item atual
         generateThumbnails(itemIndex, imageIndex, items, isFromAPI);
     }
-    
+
     function generateThumbnails(itemIndex, currentImageIndex, items, isFromAPI) {
         const thumbnailStrip = document.getElementById('thumbnailStrip');
         thumbnailStrip.innerHTML = '';
         
         const item = items[itemIndex];
         let currentImages;
-        
-        if (isFromAPI) {
-            // Para API, assumir que há apenas uma imagem por item
-            currentImages = [{ src: item.fileData, alt: item.title }];
-        } else {
-            // Para dados estáticos, usar o array de imagens
-            currentImages = item.images;
-        }
+
+        // Normalizar lista de imagens independente da origem
+        currentImages = isFromAPI
+            ? (Array.isArray(item.images) && item.images.length > 0
+                ? item.images
+                : (item.fileData ? [{ src: item.fileData, alt: item.title }] : []))
+            : (item.images || []);
         
         if (currentImages.length <= 1) {
             thumbnailStrip.style.display = 'none';
@@ -413,12 +422,12 @@ document.addEventListener('DOMContentLoaded', async function() {
             if (!item) return;
             
             let currentImages;
-            
-            if (modal.isFromAPI) {
-                currentImages = [{ src: item.fileData, alt: item.title }];
-            } else {
-                currentImages = item.images || [];
-            }
+
+            currentImages = modal.isFromAPI
+                ? (Array.isArray(item.images) && item.images.length > 0
+                    ? item.images
+                    : (item.fileData ? [{ src: item.fileData, alt: item.title }] : []))
+                : (item.images || []);
             
             if (currentImages.length > 1 && typeof modal.currentImageIndex === 'number') {
                 const newImageIndex = modal.currentImageIndex > 0 ? modal.currentImageIndex - 1 : currentImages.length - 1;
@@ -430,12 +439,12 @@ document.addEventListener('DOMContentLoaded', async function() {
             if (!item) return;
             
             let currentImages;
-            
-            if (modal.isFromAPI) {
-                currentImages = [{ src: item.fileData, alt: item.title }];
-            } else {
-                currentImages = item.images || [];
-            }
+
+            currentImages = modal.isFromAPI
+                ? (Array.isArray(item.images) && item.images.length > 0
+                    ? item.images
+                    : (item.fileData ? [{ src: item.fileData, alt: item.title }] : []))
+                : (item.images || []);
             
             if (currentImages.length > 1 && typeof modal.currentImageIndex === 'number') {
                 const newImageIndex = modal.currentImageIndex < currentImages.length - 1 ? modal.currentImageIndex + 1 : 0;
