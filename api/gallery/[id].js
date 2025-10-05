@@ -204,8 +204,8 @@ export default async function handler(req, res) {
             });
           }
 
-          // Buscar item existente
-          const existingItem = await GalleryItem.findOne({ _id: id, isActive: true });
+          // Buscar item existente (permitir edição mesmo se inativo)
+          const existingItem = await GalleryItem.findById(id);
           if (!existingItem) {
             return res.status(404).json({
               success: false,
@@ -219,7 +219,8 @@ export default async function handler(req, res) {
             caption: caption.trim(),
             category: category || 'geral',
             date: date ? new Date(date) : existingItem.date,
-            isActive: isActive !== undefined ? isActive : true
+            // Preservar status atual se não informado
+            isActive: isActive !== undefined ? isActive : existingItem.isActive
           };
 
           // Atualização de imagens (novo formato do admin)
@@ -296,7 +297,7 @@ export default async function handler(req, res) {
         }
 
       case 'DELETE':
-        // Excluir item (soft delete - requer autenticação)
+        // Excluir item (hard delete - requer autenticação)
         const deleteAuthValidation = validateToken(req.headers.authorization);
         if (!deleteAuthValidation.valid) {
           return res.status(401).json({
@@ -306,12 +307,8 @@ export default async function handler(req, res) {
         }
 
         try {
-          // Fazer soft delete (marcar como inativo)
-          const deletedItem = await GalleryItem.findOneAndUpdate(
-            { _id: id, isActive: true },
-            { isActive: false },
-            { new: true }
-          );
+          // Excluir permanentemente o item
+          const deletedItem = await GalleryItem.findByIdAndDelete(id);
 
           if (!deletedItem) {
             return res.status(404).json({
@@ -320,7 +317,7 @@ export default async function handler(req, res) {
             });
           }
 
-          console.log('🗑️ Item excluído (soft delete):', {
+          console.log('🗑️ Item excluído permanentemente:', {
             id: deletedItem._id,
             title: deletedItem.title
           });
