@@ -28,7 +28,7 @@ router.get('/', async (req, res) => {
       });
     }
 
-    const { page = 1, limit = 50, sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
+    const { page = 1, limit = 50, sortBy = 'createdAt', sortOrder = 'desc', includeInactive } = req.query;
     
     const options = {
       page: parseInt(page),
@@ -36,7 +36,36 @@ router.get('/', async (req, res) => {
       sort: { [sortBy]: sortOrder === 'desc' ? -1 : 1 }
     };
 
-    // Buscar apenas itens ativos
+    // Quando includeInactive=true, exigir autenticação de admin e retornar todos
+    if (includeInactive === 'true') {
+      // Usar middlewares programaticamente para validar admin
+      return authenticateToken(req, res, async () => {
+        return requireAdmin(req, res, async () => {
+          const items = await GalleryItem.find({})
+            .sort(options.sort)
+            .limit(options.limit * 1)
+            .skip((options.page - 1) * options.limit)
+            .exec();
+
+          const total = await GalleryItem.countDocuments({});
+
+          return res.json({
+            success: true,
+            data: {
+              items,
+              pagination: {
+                currentPage: options.page,
+                totalPages: Math.ceil(total / options.limit),
+                totalItems: total,
+                itemsPerPage: options.limit
+              }
+            }
+          });
+        });
+      });
+    }
+
+    // Buscar apenas itens ativos (público)
     const items = await GalleryItem.find({ isActive: true })
       .sort(options.sort)
       .limit(options.limit * 1)

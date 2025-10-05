@@ -56,7 +56,7 @@ async function loadGalleryItems() {
     galleryContainer.innerHTML = '<p class="loading-message">Carregando itens da galeria...</p>';
     
     try {
-        const response = await api.getGalleryItems({ sortBy: 'createdAt', sortOrder: 'desc' });
+        const response = await api.getGalleryItems({ sortBy: 'createdAt', sortOrder: 'desc', includeInactive: true });
         
         console.log('Response completa:', response);
         console.log('response.data:', response.data);
