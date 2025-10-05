@@ -529,7 +529,7 @@ function setupFileUpload() {
                     type: file.type,
                     name: file.name,
                     size: file.size,
-                    id: Date.now() + Math.random() // ID único para cada arquivo
+                    id: String(Date.now() + Math.random()) // ID único para cada arquivo (string)
                 };
                 
                 selectedFiles.push(fileObj);
@@ -544,7 +544,8 @@ function setupFileUpload() {
 
 // Função para remover um arquivo da seleção
 function removeFile(fileId) {
-    selectedFiles = selectedFiles.filter(file => file.id !== fileId);
+    const idStr = String(fileId);
+    selectedFiles = selectedFiles.filter(file => String(file.id) !== idStr);
     updateFilePreview();
 }
 
