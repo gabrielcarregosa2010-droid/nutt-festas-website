@@ -4,8 +4,9 @@
 let galleryItems = [];
 let currentItemId = null;
 let selectedFiles = []; // Array to store multiple files
-let maxFiles = 3; // Maximum number of files allowed
+let maxFiles = 3; // Máximo de novas imagens por vez
 let isLoading = false;
+let originalImagesSnapshot = []; // Mantém referência das imagens originais para comparação
 
 // Elementos DOM
 const itemModal = document.getElementById('itemModal');
@@ -188,6 +189,7 @@ function openAddItemModal() {
     
     currentItemId = null;
     selectedFiles = [];
+    originalImagesSnapshot = [];
     itemModal.style.display = 'block';
 }
 
@@ -217,6 +219,7 @@ function openEditItemModal(id) {
     
     // Limpar arquivos selecionados
     selectedFiles = [];
+    originalImagesSnapshot = [];
     
     console.log('🔍 DEBUG - Abrindo edição do item:', item.id);
     console.log('🔍 DEBUG - item.images:', item.images);
@@ -234,6 +237,8 @@ function openEditItemModal(id) {
             id: `existing_${item.id}_${index}_${Date.now()}`, // ID mais único
             isExisting: true
         }));
+        // Snapshot das imagens originais para comparação na hora de salvar
+        originalImagesSnapshot = item.images.map(img => img.src);
         
         console.log('🔍 DEBUG - selectedFiles após carregar imagens:', selectedFiles.length);
         updateFilePreview();
@@ -248,6 +253,8 @@ function openEditItemModal(id) {
             id: `existing_single_${item.id}_${Date.now()}`, // ID mais único
             isExisting: true
         }];
+        // Snapshot com a imagem única original
+        originalImagesSnapshot = [item.fileData];
         
         console.log('🔍 DEBUG - selectedFiles após carregar formato antigo:', selectedFiles.length);
         updateFilePreview();
@@ -266,6 +273,7 @@ function closeItemModal() {
     selectedFiles = [];
     filePreview.style.display = 'none';
     fileError.style.display = 'none';
+    originalImagesSnapshot = [];
 }
 
 // Abrir modal de confirmação de exclusão
@@ -323,20 +331,34 @@ async function saveItem(e) {
             console.log('🔍 DEBUG - selectedFiles.length:', selectedFiles.length);
             console.log('🔍 DEBUG - selectedFiles:', selectedFiles);
             
-            // Sempre incluir as imagens (existentes ou novas) durante a edição
-            if (selectedFiles.length > 0) {
-                updateData.images = selectedFiles.map(file => ({
-                    data: file.data,
-                    type: file.type,
-                    name: file.name,
-                    size: file.size,
-                    isExisting: file.isExisting || false
-                }));
-                console.log('🔍 DEBUG - updateData.images:', updateData.images.length, 'imagens');
-            } else {
-                // Se não há imagens selecionadas, enviar array vazio para limpar as imagens
+            // Enviar imagens apenas quando houver alterações para evitar 413 (payload muito grande)
+            if (selectedFiles.length === 0) {
+                // Limpeza explícita de imagens
                 updateData.images = [];
                 console.log('🔍 DEBUG - Enviando array vazio para limpar imagens');
+            } else {
+                const hasNewImages = selectedFiles.some(f => !f.isExisting);
+                const selectedExistingSrcs = selectedFiles
+                    .filter(f => f.isExisting)
+                    .map(f => f.data);
+                const sameAsOriginal = !hasNewImages
+                    && selectedExistingSrcs.length === originalImagesSnapshot.length
+                    && selectedExistingSrcs.every(src => originalImagesSnapshot.includes(src));
+
+                if (sameAsOriginal) {
+                    // Não enviar campo images para preservar as existentes no backend
+                    console.log('🔍 DEBUG - Preservando imagens existentes; não enviando payload de imagens');
+                } else {
+                    // Há alterações: novas imagens ou remoções; enviar conjunto atual
+                    updateData.images = selectedFiles.map(file => ({
+                        data: file.data,
+                        type: file.type,
+                        name: file.name,
+                        size: file.size,
+                        isExisting: file.isExisting || false
+                    }));
+                    console.log('🔍 DEBUG - updateData.images:', updateData.images.length, 'imagens (alteradas)');
+                }
             }
             
             response = await api.updateGalleryItem(currentItemId, updateData);
@@ -472,9 +494,12 @@ function setupFileUpload() {
     function handleFiles(files) {
         if (files.length === 0) return;
         
-        // Verificar se adicionar estes arquivos excederia o limite
-        if (selectedFiles.length + files.length > maxFiles) {
-            fileError.textContent = `Você pode selecionar no máximo ${maxFiles} imagens. Atualmente você tem ${selectedFiles.length} selecionada(s).`;
+        // Limite conta apenas novas imagens nesta sessão (não conta imagens existentes carregadas)
+        const newSelectedCount = selectedFiles.filter(f => !f.isExisting).length;
+        const incomingCount = files.length;
+        if (newSelectedCount + incomingCount > maxFiles) {
+            const available = Math.max(0, maxFiles - newSelectedCount);
+            fileError.textContent = `Você pode selecionar no máximo ${maxFiles} novas imagem(ns) por vez. Você ainda pode adicionar ${available} imagem(ns).`;
             fileError.style.display = 'block';
             return;
         }
@@ -560,10 +585,14 @@ function updateFilePreview() {
     
     previewHTML += '</div>';
     
-    if (selectedFiles.length < maxFiles) {
-        previewHTML += `<p style="text-align: center; color: #666; margin-top: 1rem; font-size: 0.9rem;">
-            Você pode adicionar mais ${maxFiles - selectedFiles.length} imagem(ns)
-        </p>`;
+    {
+        const newSelectedCount = selectedFiles.filter(f => !f.isExisting).length;
+        const remaining = Math.max(0, maxFiles - newSelectedCount);
+        if (remaining > 0) {
+            previewHTML += `<p style="text-align: center; color: #666; margin-top: 1rem; font-size: 0.9rem;">
+                Você pode adicionar mais ${remaining} nova(s) imagem(ns) nesta edição
+            </p>`;
+        }
     }
     
     filePreview.innerHTML = previewHTML;

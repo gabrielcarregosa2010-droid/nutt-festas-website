@@ -44,6 +44,11 @@
 
 .image-preview-item {
     text-align: center;
+    position: relative;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
 }
 
 .image-preview-item img {
@@ -893,4 +898,10 @@
     background: #fffaf0;
     color: #c53030;
     border-color: #feb2b2;
+}
+.multiple-images-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
 }
