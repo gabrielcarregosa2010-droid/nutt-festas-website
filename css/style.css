@@ -1187,24 +1187,18 @@ footer {
     
     nav {
         position: fixed;
-        top: 0;
+        top: 80px;
         left: 0;
-        height: 100vh;
-        width: 78%;
-        max-width: 320px;
+        width: 100%;
         background-color: var(--primary-color);
-        box-shadow: 2px 0 12px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
         z-index: 999;
         display: none;
-        transform: translateX(-100%);
-        opacity: 0;
-        transition: transform 0.3s ease, opacity 0.2s ease;
+        animation: slideDown 0.3s ease;
     }
     
     nav.show {
         display: block;
-        transform: translateX(0);
-        opacity: 1;
     }
     
     nav ul {
@@ -1257,17 +1251,7 @@ footer {
         transform: translateY(-50%);
     }
 
-    /* Overlay para fechar barra lateral */
-    header .sidebar-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.4);
-        display: none;
-        z-index: 900;
-    }
-    nav.show + .sidebar-overlay {
-        display: block;
-    }
+    /* Overlay não utilizado no dropdown */
     
     .mobile-menu-btn:hover {
         transform: rotate(90deg);
