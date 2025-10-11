@@ -1,8 +1,8 @@
 :root {
-    --primary-color: #ffb6c1; /* Rosa claro */
-    --secondary-color: #f8f9fa; /* Branco */
+    --primary-color: #d6909b; /* Rosa claro */
+    --secondary-color: #fff8eb; /* Branco */
     --text-color: #212529; /* Preto */
-    --accent-color: #ff758f; /* Rosa mais escuro para destaque */
+    --accent-color: #5f081f; /* Rosa mais escuro para destaque */
     --success-color: #28a745;
     --danger-color: #dc3545;
     --warning-color: #ffc107;
