@@ -40,10 +40,22 @@ document.addEventListener('DOMContentLoaded', function() {
     // Menu mobile
     const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
     const nav = document.querySelector('nav');
+    const overlay = document.querySelector('.sidebar-overlay');
     
     if (mobileMenuBtn && nav) {
         mobileMenuBtn.addEventListener('click', function() {
             nav.classList.toggle('show');
+            const isOpen = nav.classList.contains('show');
+            mobileMenuBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        });
+    }
+
+    if (overlay && nav) {
+        overlay.addEventListener('click', function() {
+            if (nav.classList.contains('show')) {
+                nav.classList.remove('show');
+                if (mobileMenuBtn) mobileMenuBtn.setAttribute('aria-expanded', 'false');
+            }
         });
     }
     
@@ -55,6 +67,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Fechar menu mobile se estiver aberto
             if (nav.classList.contains('show')) {
                 nav.classList.remove('show');
+                if (mobileMenuBtn) mobileMenuBtn.setAttribute('aria-expanded', 'false');
             }
             
             const targetId = this.getAttribute('href');
