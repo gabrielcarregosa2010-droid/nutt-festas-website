@@ -1,8 +1,12 @@
 :root {
-    --primary-color: #d6909b; /* Rosa claro */
-    --secondary-color: #fff8eb; /* Branco */
-    --text-color: #212529; /* Preto */
-    --accent-color: #5f081f; /* Rosa mais escuro para destaque */
+    /* Paleta principal atualizada conforme especificação */
+    --primary-color: #d6909b; /* Elementos decorativos e cabeçalhos */
+    --secondary-color: #fff8eb; /* Fundo */
+    --text-color: #3a3a3a; /* Texto padrão */
+    --title-color: #5f081f; /* Títulos */
+    --accent-color: #d6909b; /* Ícones e separadores */
+
+    /* Cores auxiliares existentes */
     --success-color: #28a745;
     --danger-color: #dc3545;
     --warning-color: #ffc107;
@@ -162,7 +166,7 @@ header h1:hover {
 }
 
 .bg-light {
-    background-color: var(--light-color);
+    background-color: var(--secondary-color);
 }
 
 /* Hero Section */
